@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#085c04</color>
+    <color name="colorPrimary">#085C04</color>
+    <color name="colorTransparentPrimary">#55085c04</color>
     <color name="colorPrimaryDark">#044004</color>
-    <color name="colorAccent">#085c04</color>
+    <color name="colorAccent">#07259C</color>
+    <color name="colorVeryTransparentAccent">#1107259C</color>
 
-    <color name="colorPrimaryTransparent">#55085c04</color>
+    <color name="colorButtonOutline">#CC8282FF</color>
+    <color name="colorButtonBackGround">#AA07259C</color>
+    <color name="colorButtonPressedBackGround">#EE07259C</color>
 
-    <!--
-    old color accent: #111111
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
-    -->
     <color name="listOffWhite">#EEEEEE</color>
 </resources>

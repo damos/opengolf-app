@@ -84,7 +84,7 @@ public class CourseMapActivity extends FragmentActivity implements OnMapReadyCal
 
         this.courseDriver.drawPreview();
 
-        FloatingActionButton startButton = this.findViewById(R.id.startButton);
+        View startButton = this.findViewById(R.id.startButton);
         startButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 v.setVisibility(View.GONE);

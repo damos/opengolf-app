@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:state_pressed="true" >
+        <shape android:shape="oval">
+            <stroke android:color="@color/colorButtonOutline" android:width="2px"/>
+            <solid android:color="@color/colorButtonPressedBackGround" />
+            <size
+                android:width="55dp"
+                android:height="55dp"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <stroke android:color="@color/colorButtonOutline" android:width="1px"/>
+            <solid android:color="@color/colorButtonBackGround" />
+            <size
+                android:width="55dp"
+                android:height="55dp"/>
+        </shape>
+    </item>
+</selector>
+
+<!--
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:drawable="@drawable/image_name_here" />
+    <item>
+        <shape android:shape="rectangle" android:padding="10dp">
+            <corners
+                 android:bottomRightRadius="5dp"
+                 android:bottomLeftRadius="5dp"
+                 android:topLeftRadius="5dp"
+                 android:topRightRadius="5dp"/>
+         </shape>
+   </item>
+</layer-list>
+-->

@@ -58,10 +58,10 @@ public class LayoutDriver {
 
     public void setGreenDistance(int distance, int accuracy){
         if(accuracy > 1){
-            this.curLocToGreen.setText(distance + "±" + accuracy);
+            this.curLocToGreen.setText(distance + "±" + accuracy + "y");
         }
         else{
-            this.curLocToGreen.setText(distance);
+            this.curLocToGreen.setText(distance + "y");
         }
     }
 
@@ -88,8 +88,8 @@ public class LayoutDriver {
     }
 
     public void setWayPoint(int pointToGreen, int locToPoint){
-        this.pointToGreen.setText("▲ " + pointToGreen);
-        this.curLocToPoint.setText("▼ " + locToPoint);
+        this.pointToGreen.setText("▲ " + pointToGreen + "y");
+        this.curLocToPoint.setText("▼ " + locToPoint + "y");
         this.pointToGreen.setVisibility(View.VISIBLE);
         this.curLocToPoint.setVisibility(View.VISIBLE);
     }

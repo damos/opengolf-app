@@ -6,7 +6,7 @@
 
     <solid
         android:angle="270"
-        android:color="@color/colorPrimaryTransparent"/>
+        android:color="@color/colorTransparentPrimary"/>
 
     <stroke
         android:color="@color/colorPrimary"
