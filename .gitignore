@@ -15,4 +15,5 @@ gradle
 settings.gradle
 app/src/debug/res/values/google_maps_api.xml
 app/src/release/res/values/google_maps_api.xml
+app/release/**
 
