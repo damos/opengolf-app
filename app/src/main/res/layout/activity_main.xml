@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/listOffWhite"
+    tools:context="ca.dait.opengolf.app.activities.mainmenu.MainMenuActivity">
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/courseListView"
+        android:padding="4sp"
+        android:divider="@color/listOffWhite"
+        android:dividerHeight="4sp"/>
+
+</android.support.constraint.ConstraintLayout>

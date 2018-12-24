@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#085c04</color>
+    <color name="colorPrimaryDark">#044004</color>
+    <color name="colorAccent">#085c04</color>
+
+    <color name="colorPrimaryTransparent">#55085c04</color>
+
+    <!--
+    old color accent: #111111
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    -->
+    <color name="listOffWhite">#EEEEEE</color>
+</resources>

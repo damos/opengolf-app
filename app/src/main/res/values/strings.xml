@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Open Golf</string>
+    <string name="title_activity_main">Open Golf</string>
+    <string name="title_activity_course_map">Course Map</string>
+</resources>

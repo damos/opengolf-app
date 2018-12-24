@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:shape="rectangle">
+
+    <solid
+        android:angle="270"
+        android:color="@color/colorPrimaryTransparent"/>
+
+    <stroke
+        android:color="@color/colorPrimary"
+        android:width="3px"/>
+
+    <corners
+        android:bottomLeftRadius="7dp"/>
+</shape>
+
+
+
+
