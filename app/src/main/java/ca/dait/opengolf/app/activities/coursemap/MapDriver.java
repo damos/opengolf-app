@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
+import android.os.Handler;
 import android.view.View;
 
 import com.google.android.gms.location.LocationCallback;
@@ -47,7 +48,7 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
 
     private Location currentLocation;
     private LatLng currentPosition;
-    private double distanceToGreen = -1;
+    private double currentDistanceToGreen = -1;
 
     private OnLocationChangedListener locationSourceListener;
 
@@ -81,21 +82,21 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
         this.googleMap.setLocationSource(this);
         this.googleMap.setMyLocationEnabled(true);
 
-        this.googleMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
-            @Override
-            public void onCameraMoveStarted(int reason) {
-                if(reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE){
-                    MapDriver.this.userAction();
-                }
-            }
-        });
-
         this.googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener(){
             @Override public boolean onMarkerClick(Marker marker){
                 if(MapDriver.this.waypoint != null && MapDriver.this.waypoint.equals(marker)){
                     MapDriver.this.clearWayPoint();
                 }
                 return true; //Always return true to disable default behavior (center marker in map)
+            }
+        });
+
+        this.googleMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
+            @Override
+            public void onCameraMoveStarted(int reason) {
+            if(reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE){
+                MapDriver.this.userAction();
+            }
             }
         });
 
@@ -119,6 +120,13 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
                 MapDriver.this.repositionCamera();
             }
         });
+        this.layoutDriver.setWaypointButtonListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MapDriver.this.userAction();
+                MapDriver.this.repositionCamera(MapDriver.this.waypoint.pos, true);
+            }
+        });
     }
 
     private void userAction(){
@@ -134,11 +142,7 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
     private void cancelUserAction(){
         this.cameraOverride = false;
         this.layoutDriver.clearCancelable();
-
-        if(this.waypoint != null){
-            this.waypoint.clear();
-            this.waypoint = null;
-        }
+        this.clearWayPoint();
 
         //Disable extra map controls
         UiSettings uiSettings = this.googleMap.getUiSettings();
@@ -201,8 +205,8 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
     public void drawPanel(){
         if(this.currentPosition != null) {
             Marker currentHoleMarker = this.courseMarkers[this.currentHoleNo];
-            this.distanceToGreen = SphericalUtil.computeDistanceBetween(this.currentPosition, currentHoleMarker.getPosition());
-            this.layoutDriver.setGreenDistance(Calculator.getYards(this.distanceToGreen), Calculator.getYards((double) this.currentLocation.getAccuracy()));
+            this.currentDistanceToGreen = SphericalUtil.computeDistanceBetween(this.currentPosition, currentHoleMarker.getPosition());
+            this.layoutDriver.setGreenDistance(Calculator.getYards(this.currentDistanceToGreen), Calculator.getYards((double) this.currentLocation.getAccuracy()));
 
             if (this.waypoint != null) {
                 this.waypoint.draw();
@@ -218,21 +222,35 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
 
 
     private void repositionCamera(){
-        if(!this.cameraOverride && this.currentPosition != null) {
+        this.repositionCamera(null, false);
+    }
+    private void repositionCamera(final LatLng positionIn, boolean override){
+        if(!this.cameraOverride || override){
+            if(positionIn == null){
+                this.repositionCamera(this.currentPosition, this.currentDistanceToGreen);
+            }
+            else{
+                Marker currentHoleMarker = this.courseMarkers[this.currentHoleNo];
+                double distanceToGreen = SphericalUtil.computeDistanceBetween(positionIn, currentHoleMarker.getPosition());
+                this.repositionCamera(positionIn, distanceToGreen);
+            }
+        }
+    }
+    private void repositionCamera(final LatLng position, final double distance){
+        if(position != null && distance > 0) {
             Marker currentHoleMarker = this.courseMarkers[this.currentHoleNo];
-            float zoomLevel = Calculator.getZoom(this.mapView.getMeasuredHeight(), this.distanceToGreen);
+            float zoomLevel = Calculator.getZoom(this.mapView.getMeasuredHeight(), distance);
 
             this.googleMap.animateCamera(
                     CameraUpdateFactory.newCameraPosition(
                             CameraPosition.builder()
                                     .target(
                                             LatLngBounds.builder()
-                                                    .include(this.currentPosition)
+                                                    .include(position)
                                                     .include(currentHoleMarker.getPosition())
                                                     .build().getCenter())
                                     .zoom(zoomLevel)
-                                    .bearing((float) SphericalUtil.computeHeading(
-                                            this.currentPosition,
+                                    .bearing((float) SphericalUtil.computeHeading(position,
                                             currentHoleMarker.getPosition())).build()
                     )
             );
@@ -272,6 +290,7 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
             this.waypoint.clear();
             this.waypoint = new Waypoint(latLng);
         }
+        this.layoutDriver.showWayPointAction();
         this.layoutDriver.showCancelable();
         this.drawPanel();
     }
@@ -281,6 +300,7 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
             this.waypoint.clear();
             this.waypoint = null;
         }
+        this.layoutDriver.hideWayPointAction();
         //If the camera hasn't been moved manually, we can remove the cancel UI
         if(!this.cameraOverride){
             this.layoutDriver.clearCancelable();

@@ -17,6 +17,7 @@ public class LayoutDriver {
     private final View prevButton;
     private final View nextButton;
     private final View cancelButton;
+    private final View waypointButton;
     private final TextView curLocToGreen;
     private final TextView pointToGreen;
     private final TextView curLocToPoint;
@@ -26,6 +27,7 @@ public class LayoutDriver {
         this.prevButton = activity.findViewById(R.id.prevButton);
         this.nextButton = activity.findViewById(R.id.nextButton);
         this.cancelButton = activity.findViewById(R.id.cancelButton);
+        this.waypointButton = activity.findViewById(R.id.waypointButton);
         this.curLocToGreen = activity.findViewById(R.id.curLocToGreen);
         this.pointToGreen = activity.findViewById(R.id.pointToGreen);
         this.curLocToPoint = activity.findViewById(R.id.curLocToPoint);
@@ -43,9 +45,21 @@ public class LayoutDriver {
         this.cancelButton.setOnClickListener(listener);
     }
 
+    public void setWaypointButtonListener(View.OnClickListener listener){
+        this.waypointButton.setOnClickListener(listener);
+    }
+
     public void start(){
         this.curLocToGreen.setVisibility(View.VISIBLE);
         this.holeNo.setVisibility(View.VISIBLE);
+    }
+
+    public void showWayPointAction(){
+        this.waypointButton.setVisibility(View.VISIBLE);
+    }
+
+    public void hideWayPointAction(){
+        this.waypointButton.setVisibility(View.GONE);
     }
 
     public void showCancelable(){
