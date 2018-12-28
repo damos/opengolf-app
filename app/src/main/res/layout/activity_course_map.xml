@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|center_vertical"
-        android:background="@color/colorPrimary"
+        android:background="@drawable/rectangle_background_gradient"
         android:textAlignment="center"
         android:text="@string/title_activity_main"
         android:textColor="#FFFFFF"
@@ -31,50 +31,44 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_gravity="top|left"
-            android:background="@drawable/rectangle_top_left_container">
+            android:layout_gravity="top|start"
+            android:padding="5dp">
 
             <TextView
                 android:id="@+id/curLocToGreen"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
-                android:paddingRight="3dp"
-                android:textSize="25dp"
+                android:textSize="25sp"
                 android:textColor="@android:color/white"
                 android:shadowColor="@android:color/black"
                 android:shadowDx="3"
                 android:shadowDy="3"
-                android:shadowRadius="3"
-                android:visibility="gone" />
+                android:shadowRadius="3"/>
 
             <TextView
                 android:id="@+id/pointToGreen"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
-                android:paddingRight="3dp"
-                android:textSize="25dp"
+                android:textSize="25sp"
                 android:textColor="@android:color/white"
                 android:shadowColor="@android:color/black"
                 android:shadowDx="3"
                 android:shadowDy="3"
-                android:shadowRadius="3"
-                android:visibility="gone" />
+                android:shadowRadius="3" />
 
             <TextView
                 android:id="@+id/curLocToPoint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
-                android:paddingRight="3dp"
-                android:textSize="25dp"
+                android:textSize="25sp"
                 android:textColor="@android:color/white"
                 android:shadowColor="@android:color/black"
                 android:shadowDx="3"
                 android:shadowDy="3"
-                android:shadowRadius="3"
-                android:visibility="gone" />
+                android:shadowRadius="3" />
 
         </LinearLayout>
 
@@ -82,17 +76,14 @@
             android:id="@+id/holeNo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|right"
+            android:layout_gravity="top|end"
             android:includeFontPadding="false"
-            android:paddingLeft="8dp"
             android:textSize="50sp"
             android:textColor="@android:color/white"
             android:shadowColor="@android:color/black"
             android:shadowDx="3"
             android:shadowDy="3"
-            android:shadowRadius="3"
-            android:visibility="gone"
-            android:background="@drawable/rectangle_top_right_container"/>
+            android:shadowRadius="3"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -111,6 +102,16 @@
                 android:visibility="gone" />
 
         </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/spinner"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center|center"
+            android:indeterminateTint="@color/colorPrimaryDark"
+            android:background="@drawable/background_progress_circle"
+            android:indeterminate="true"
+            android:visibility="gone"/>
 
         <ImageView
             android:id="@+id/startButton"

@@ -23,6 +23,9 @@ public class Calculator {
         return Math.round((float)meters * YARDS_FACTOR);
     }
 
+    public static float getPixelsFromDp(float dp){
+        return dp * Resources.getSystem().getDisplayMetrics().density;
+    }
 
     /**
      * This method needs to be tuned with a high precision math library.

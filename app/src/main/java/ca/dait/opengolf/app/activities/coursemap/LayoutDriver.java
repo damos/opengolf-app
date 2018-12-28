@@ -13,15 +13,16 @@ import ca.dait.opengolf.app.R;
  */
 
 public class LayoutDriver {
-    private final TextView holeNo;
     private final View startButton;
     private final View prevButton;
     private final View nextButton;
     private final View cancelButton;
     private final View waypointButton;
+    private final TextView holeNo;
     private final TextView curLocToGreen;
     private final TextView pointToGreen;
     private final TextView curLocToPoint;
+    private final View spinner;
 
     LayoutDriver(CourseMapActivity activity){
         this.holeNo = activity.findViewById(R.id.holeNo);
@@ -33,6 +34,7 @@ public class LayoutDriver {
         this.curLocToGreen = activity.findViewById(R.id.curLocToGreen);
         this.pointToGreen = activity.findViewById(R.id.pointToGreen);
         this.curLocToPoint = activity.findViewById(R.id.curLocToPoint);
+        this.spinner = activity.findViewById(R.id.spinner);
     }
 
     public void setPreviousListener(View.OnClickListener listener){
@@ -55,10 +57,16 @@ public class LayoutDriver {
         this.startButton.setOnClickListener(listener);
     }
 
-    public void start(){
-        this.curLocToGreen.setVisibility(View.VISIBLE);
-        this.holeNo.setVisibility(View.VISIBLE);
+    public void hideStartButton(){
         this.startButton.setVisibility(View.GONE);
+    }
+
+    public void showSpinner(){
+        this.spinner.setVisibility(View.VISIBLE);
+    }
+
+    public void hideSpinner(){
+        this.spinner.setVisibility(View.GONE);
     }
 
     public void showWayPointAction(){

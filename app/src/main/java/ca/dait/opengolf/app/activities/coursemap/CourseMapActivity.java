@@ -130,7 +130,7 @@ public class CourseMapActivity extends FragmentActivity implements OnMapReadyCal
     public void onRequestPermissionsResult (int requestCode, String[] permissions, int[] grantResults){
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(LocationService.checkPermissions(requestCode, permissions, grantResults)){
-            //Re-try start after user accepts permissions.
+            //Re-try hideStartButton after user accepts permissions.
             this.locationService.start();
         }
         else{

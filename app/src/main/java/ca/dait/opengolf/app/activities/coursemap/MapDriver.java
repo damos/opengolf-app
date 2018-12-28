@@ -34,12 +34,16 @@ import ca.dait.opengolf.entities.course.CourseDetails;
  */
 public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickListener, LocationSource {
 
-    private View mapView;
-    private Context context;
-    private CourseDetails courseDetails;
-    private GoogleMap googleMap;
-
-    private LayoutDriver layoutDriver;
+    private final View mapView;
+    private final Context context;
+    private final LayoutDriver layoutDriver;
+    private final CourseDetails courseDetails;
+    private final GoogleMap googleMap;
+    private final float anchorFlagIconX;
+    private final float anchorFlagIconY;
+    private final float coursePreviewZoom;
+    private final float waypointLinePx;
+    private final Bitmap waypointIcon;
 
     private int currentHoleNo = 0;
     private Marker[] courseMarkers;
@@ -53,14 +57,11 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
 
     private boolean cameraOverride = false;
 
-    //private final Bitmap flagIcon;
-    private final Bitmap selectPointIcon;
 
     @SuppressLint("MissingPermission")
     protected MapDriver(Context context, View mapView, CourseDetails courseDetails, GoogleMap googleMap, LayoutDriver controlPanel){
 
-        //this.flagIcon = BitmapFactory.fromDrawable(R.drawable.ic_golf, context.getResources());
-        this.selectPointIcon = BitmapFactory.fromDrawable(R.drawable.ic_waypoint, context.getResources());
+        this.waypointIcon = BitmapFactory.fromDrawable(R.drawable.ic_waypoint, context.getResources());
 
         this.context = context;
         this.mapView = mapView;
@@ -76,6 +77,12 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
         uiSettings.setScrollGesturesEnabled(false);
         uiSettings.setZoomControlsEnabled(false);
         uiSettings.setZoomGesturesEnabled(false);
+
+        this.coursePreviewZoom = Float.valueOf(this.context.getString(R.string.coursePreviewZoom));
+        this.anchorFlagIconX = Float.valueOf(this.context.getString(R.string.anchorFlagIconX));
+        this.anchorFlagIconY = Float.valueOf(this.context.getString(R.string.anchorFlagIconY));
+        this.waypointLinePx = Calculator.getPixelsFromDp(
+                Float.valueOf(this.context.getString(R.string.waypointLineDp)));
 
         //TODO: Should this be here? Technically we need to re-check permissions.
         this.googleMap.setLocationSource(this);
@@ -162,23 +169,21 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
                     new MarkerOptions()
                             .position(pos)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_golf_flag))
-                            //TODO: Set these externally in config.
-                            .anchor(.27f, .95f)
+                            .anchor(this.anchorFlagIconX, this.anchorFlagIconY)
             );
         }
 
-        float previewZoom = Float.valueOf(this.context.getString(R.string.coursePreviewZoom));
         MapDriver.this.googleMap.moveCamera(
-                CameraUpdateFactory.newLatLngZoom(boundsBuilder.build().getCenter(), previewZoom)
+                CameraUpdateFactory.newLatLngZoom(boundsBuilder.build().getCenter(), this.coursePreviewZoom)
         );
-        MapDriver.this.googleMap.setMinZoomPreference(previewZoom);
     }
 
     /**
      * Clears the preview screen and starts the first hole.
      */
     public void start(){
-        this.layoutDriver.start();
+        this.layoutDriver.hideStartButton();
+        this.layoutDriver.showSpinner();
         for(Marker m : this.courseMarkers){
             m.setVisible(false);
         }
@@ -199,6 +204,7 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
 
         this.drawPanel();
         this.repositionCamera();
+        this.layoutDriver.hideSpinner();
     }
 
     public void drawPanel(){
@@ -334,7 +340,7 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
                 this.marker = MapDriver.this.googleMap.addMarker(
                         new MarkerOptions()
                                 .position(pos)
-                                .icon(BitmapDescriptorFactory.fromBitmap(MapDriver.this.selectPointIcon))
+                                .icon(BitmapDescriptorFactory.fromBitmap(MapDriver.this.waypointIcon))
                                 .anchor(0.5f,0.5f)
                 );
             }
@@ -347,10 +353,10 @@ public class MapDriver extends LocationCallback implements GoogleMap.OnMapClickL
 
             this.polyLine = MapDriver.this.googleMap.addPolyline(
                     new PolylineOptions()
-                            .add(MapDriver.this.currentPosition, pos, greenPosition)
-                            .color(Color.WHITE)
-                            .endCap(new RoundCap())
-                            .width(15)
+                        .add(MapDriver.this.currentPosition, pos, greenPosition)
+                        .color(Color.WHITE)
+                        .endCap(new RoundCap())
+                         .width(MapDriver.this.waypointLinePx)
             );
         }
 

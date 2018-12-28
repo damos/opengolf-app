@@ -54,6 +54,7 @@ public class MainMenuActivity extends AppCompatActivity {
         OpenGolfRequestQueue.init(this.getApplicationContext());
 
         this.refreshLayout = this.findViewById(R.id.swipeRefresh);
+        this.refreshLayout.setColorSchemeColors(this.getResources().getColor(R.color.colorPrimaryDark));
         this.refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -156,7 +157,7 @@ public class MainMenuActivity extends AppCompatActivity {
     public void onRequestPermissionsResult (int requestCode, String[] permissions, int[] grantResults){
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(LocationService.checkPermissions(requestCode, permissions, grantResults)){
-            //Re-try start after user accepts permissions.
+            //Re-try hideStartButton after user accepts permissions.
             this.locationService.start();
         }
         else{
