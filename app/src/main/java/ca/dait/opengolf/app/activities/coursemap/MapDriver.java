@@ -5,7 +5,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
-import android.os.Handler;
 import android.view.View;
 
 import com.google.android.gms.location.LocationCallback;

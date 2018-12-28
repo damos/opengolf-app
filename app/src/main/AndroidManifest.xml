@@ -18,7 +18,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:configChanges="keyboardHidden|orientation" >
-        <activity android:name=".activities.mainmenu.MainMenuActivity" android:screenOrientation="portrait">
+        <activity
+            android:name=".activities.mainmenu.MainMenuActivity"
+            android:windowSoftInputMode="stateUnchanged"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -38,8 +41,8 @@
 
         <activity
             android:name=".activities.coursemap.CourseMapActivity"
-            android:label="@string/title_activity_course_map"
-            android:screenOrientation="portrait"></activity>
+            android:label="@string/title_activity_main"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

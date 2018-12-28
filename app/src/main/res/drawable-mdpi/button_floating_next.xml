@@ -2,11 +2,11 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
     <item
         android:gravity="center"
-        android:drawable="@drawable/ic_floating_button" />
+        android:drawable="@drawable/button_background_floating" />
     <item
         android:left="3dp"
         android:gravity="center"
         android:width="50dp"
         android:height="40dp"
-        android:drawable="@drawable/vector_navigate_next" />
+        android:drawable="@drawable/vector_navigate_next_white" />
 </layer-list>

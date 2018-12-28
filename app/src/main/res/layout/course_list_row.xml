@@ -4,17 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/rectangle_list_view"
+    android:background="@drawable/rectangle_list_view_item"
     android:clickable="true"
     android:focusable="auto"
     android:padding="6sp">
 
-    <!--
-        android:textAllCaps="true"
-        android:textAlignment="center"
-        android:layout_height="100px"
-
-    -->
     <TextView
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/courseName"

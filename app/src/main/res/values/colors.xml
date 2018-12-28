@@ -10,5 +10,7 @@
     <color name="colorButtonBackGround">#AA07259C</color>
     <color name="colorButtonPressedBackGround">#EE07259C</color>
 
+    <color name="blackTransparent">#99000000</color>
+    <color name="whiteTransparent">#99FFFFFF</color>
     <color name="listOffWhite">#EEEEEE</color>
 </resources>

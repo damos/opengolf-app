@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
     <item
         android:gravity="center"
-        android:drawable="@drawable/ic_floating_button" />
+        android:drawable="@drawable/button_background_floating" />
     <item
         android:left="4dp"
         android:gravity="center"

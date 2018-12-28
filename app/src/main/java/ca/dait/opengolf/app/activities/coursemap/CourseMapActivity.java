@@ -2,7 +2,6 @@ package ca.dait.opengolf.app.activities.coursemap;
 
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.view.Window;
@@ -27,7 +26,7 @@ import ca.dait.opengolf.entities.course.CourseDetails;
 public class CourseMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private CourseDetails courseDetails;
-    private MapDriver courseDriver;
+    private MapDriver mapDriver;
 
     private LocationService locationService;
 
@@ -77,17 +76,16 @@ public class CourseMapActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
-        LayoutDriver controlPanel = new LayoutDriver(this);
+        LayoutDriver layoutDriver = new LayoutDriver(this);
 
-        this.courseDriver = new MapDriver(this, this.findViewById(R.id.courseMap),
-                this.courseDetails, googleMap, controlPanel);
+        this.mapDriver = new MapDriver(this, this.findViewById(R.id.courseMap),
+                this.courseDetails, googleMap, layoutDriver);
 
-        this.courseDriver.drawPreview();
+        this.mapDriver.drawPreview();
 
-        View startButton = this.findViewById(R.id.startButton);
-        startButton.setOnClickListener(new View.OnClickListener() {
+        layoutDriver.setStartButtonListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
-                v.setVisibility(View.GONE);
                 CourseMapActivity.this.start();
             }
         });
@@ -100,16 +98,16 @@ public class CourseMapActivity extends FragmentActivity implements OnMapReadyCal
         layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL;
         window.setAttributes(layoutParams);
 
-        this.courseDriver.start();
-
         Resources resources = this.getResources();
 
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setInterval(resources.getInteger(R.integer.locationInterval));
         locationRequest.setFastestInterval(resources.getInteger(R.integer.locationFastestInterval));
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        this.locationService = new LocationService(this, locationRequest, this.courseDriver);
+        this.locationService = new LocationService(this, locationRequest, this.mapDriver);
         this.locationService.start();
+
+        this.mapDriver.start();
     }
 
     @Override
