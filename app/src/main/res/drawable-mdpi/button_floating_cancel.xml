@@ -5,7 +5,5 @@
         android:drawable="@drawable/button_background_floating" />
     <item
         android:gravity="center"
-        android:width="30dp"
-        android:height="30dp"
         android:drawable="@drawable/vector_close_white" />
 </layer-list>

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
     <item
-        android:gravity="center"
         android:drawable="@drawable/button_background_floating" />
-    <item
-        android:gravity="center"
-        android:drawable="@drawable/ic_waypoint_outline_small" />
+    <item android:gravity="center">
+        <shape android:shape="oval">
+            <stroke android:color="#CCFFFFFF" android:width="0.5dp"/>
+            <solid android:color="#66FFFFFF" />
+            <size
+                android:width="30dp"
+                android:height="30dp"/>
+        </shape>
+    </item>
     <item
         android:gravity="center"
         android:drawable="@drawable/ic_waypoint_core" />

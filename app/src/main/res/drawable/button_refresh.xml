@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <size android:height="40dp" android:width="40dp" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/button_background_clear_pressed_white" />
+    <item  android:gravity="center" android:drawable="@drawable/vector_refresh_white" />
+</layer-list>

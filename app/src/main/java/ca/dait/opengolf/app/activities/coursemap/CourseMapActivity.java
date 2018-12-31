@@ -1,67 +1,55 @@
 package ca.dait.opengolf.app.activities.coursemap;
 
-import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import ca.dait.opengolf.app.R;
-import ca.dait.opengolf.app.gps.LocationService;
 import ca.dait.opengolf.app.http.EntityRequest;
 import ca.dait.opengolf.app.http.OpenGolfRequestQueue;
 import ca.dait.opengolf.entities.course.CourseDetails;
 
-public class CourseMapActivity extends FragmentActivity implements OnMapReadyCallback {
+public class CourseMapActivity extends TrackingMapActivity{
 
     private CourseDetails courseDetails;
-    private MapDriver mapDriver;
 
-    private LocationService locationService;
+    private int currentHoleNo = 0;
+    private Marker[] courseMarkers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_course_map);
 
         String courseId = this.getIntent().getStringExtra(this.getString(R.string.courseId));
         String url = String.format(this.getString(R.string.url_getCourse), courseId);
 
         EntityRequest<CourseDetails> request =
-            new EntityRequest<>(CourseDetails.class, Request.Method.GET, url,
-                new Response.Listener<CourseDetails>() {
-                    @Override
-                    public void onResponse(CourseDetails courseDetails) {
-                        CourseMapActivity.this.courseDetails = courseDetails;
-                        TextView titleView = CourseMapActivity.this.findViewById(R.id.titleTextView);
-                        titleView.setText(courseDetails.getName());
+            new EntityRequest<>(CourseDetails.class, Request.Method.GET, url, (courseDetails) -> {
+                this.courseDetails = courseDetails;
+                this.layoutDriver.setCourseTitle(this.courseDetails.getName());
 
-                        SupportMapFragment mapFragment = (SupportMapFragment)
-                                CourseMapActivity.this.getSupportFragmentManager().findFragmentById(R.id.courseMap);
-                        mapFragment.getMapAsync(CourseMapActivity.this);
-                    }
+                SupportMapFragment mapFragment = (SupportMapFragment)
+                            this.getSupportFragmentManager().findFragmentById(R.id.courseMap);
+                    mapFragment.getMapAsync(CourseMapActivity.this);
                 },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(CourseMapActivity.this, "Unable to load course.",
-                                Toast.LENGTH_SHORT).show();
-                        CourseMapActivity.this.finish();
-                    }
+                (error) ->{
+                    Toast.makeText(CourseMapActivity.this, "Unable to load course.", Toast.LENGTH_SHORT).show();
+                    this.finish();
                 });
 
         OpenGolfRequestQueue.send(request);
+
+        this.layoutDriver.showStartButton();
     }
 
     /**
@@ -75,67 +63,128 @@ public class CourseMapActivity extends FragmentActivity implements OnMapReadyCal
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        super.onMapReady(googleMap);
+        UiSettings uiSettings = this.googleMap.getUiSettings();
+        uiSettings.setRotateGesturesEnabled(false);
+        uiSettings.setScrollGesturesEnabled(false);
+        uiSettings.setZoomGesturesEnabled(false);
 
-        LayoutDriver layoutDriver = new LayoutDriver(this);
+        //Draw Preview
+        CourseDetails.Hole holes[] = this.courseDetails.getHoles();
+        this.courseMarkers = new Marker[holes.length];
+        final LatLngBounds.Builder boundsBuilder = LatLngBounds.builder();
 
-        this.mapDriver = new MapDriver(this, this.findViewById(R.id.courseMap),
-                this.courseDetails, googleMap, layoutDriver);
+        for(int i = 0; i < holes.length; i++){
+            LatLng pos = new LatLng(holes[i].getLat(), holes[i].getLon());
+            boundsBuilder.include(pos);
 
-        this.mapDriver.drawPreview();
+            this.courseMarkers[i] = this.googleMap.addMarker(
+                    new MarkerOptions()
+                            .position(pos)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_golf_flag))
+                            .anchor(this.anchorFlagIconX, this.anchorFlagIconY)
+            );
+        }
 
-        layoutDriver.setStartButtonListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                CourseMapActivity.this.start();
+        this.googleMap.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(boundsBuilder.build().getCenter(),
+                    Float.valueOf(this.getString(R.string.coursePreviewZoom)))
+        );
+
+        this.layoutDriver.setStartButtonListener((view) -> {
+            this.start();
+        });
+    }
+
+    @Override
+    protected void setInteractiveListeners() {
+        super.setInteractiveListeners();
+
+        this.googleMap.setOnMapClickListener((position) -> {
+            if (this.waypoint == null) {
+                this.waypoint = new Waypoint(position);
+            } else {
+                this.waypoint.updatePosition(position);
             }
+            this.layoutDriver.showWayPointAction();
+            this.layoutDriver.showCancelable();
+            this.updatePanel();
+        });
+
+        this.layoutDriver.setPreviousListener((view) -> {
+            this.goToHole(this.currentHoleNo - 1);
+        });
+
+        this.layoutDriver.setNextListener((view) -> {
+            this.goToHole(this.currentHoleNo + 1);
         });
     }
 
     private void start(){
-        //Set max brightness. Golfers are usually outdoors in extreme brightness.
-        Window window = this.getWindow();
-        WindowManager.LayoutParams layoutParams = window.getAttributes();
-        layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL;
-        window.setAttributes(layoutParams);
-
-        Resources resources = this.getResources();
-
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(resources.getInteger(R.integer.locationInterval));
-        locationRequest.setFastestInterval(resources.getInteger(R.integer.locationFastestInterval));
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        this.locationService = new LocationService(this, locationRequest, this.mapDriver);
-        this.locationService.start();
-
-        this.mapDriver.start();
-    }
-
-    @Override
-    public void onPause(){
-        if(this.locationService != null){
-            this.locationService.stop();
+        this.layoutDriver.clearCourseTitle();
+        this.layoutDriver.hideStartButton();
+        this.layoutDriver.showSpinner();
+        for(Marker m : this.courseMarkers){
+            m.setVisible(false);
         }
-        super.onPause();
+        this.goToHole(0);
+        UiSettings uiSettings = this.googleMap.getUiSettings();
+        uiSettings.setZoomGesturesEnabled(true);
+
+        this.startGpsUpdates();
     }
 
     @Override
-    public void onResume(){
-        if(this.locationService != null){
-            this.locationService.start();
+    protected void userAction(){
+        super.userAction();
+
+        //Enable extra map controls
+        UiSettings uiSettings = this.googleMap.getUiSettings();
+        uiSettings.setScrollGesturesEnabled(true);
+        uiSettings.setRotateGesturesEnabled(true);
+    }
+
+    protected void cancelUserAction(){
+        super.cancelUserAction();
+        this.layoutDriver.clearCancelable();
+        this.clearWayPoint();
+
+        //Disable extra map controls
+        UiSettings uiSettings = this.googleMap.getUiSettings();
+        uiSettings.setScrollGesturesEnabled(false);
+        uiSettings.setRotateGesturesEnabled(false);
+    }
+
+    @Override
+    protected void clearWayPoint() {
+        super.clearWayPoint();
+        if(!this.cameraOverride){
+            this.layoutDriver.clearCancelable();
         }
-        super.onResume();
     }
 
-    @Override
-    public void onRequestPermissionsResult (int requestCode, String[] permissions, int[] grantResults){
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(LocationService.checkPermissions(requestCode, permissions, grantResults)){
-            //Re-try hideStartButton after user accepts permissions.
-            this.locationService.start();
+    private void goToHole(int newHoleNo){
+        this.courseMarkers[this.currentHoleNo].setVisible(false);
+        this.courseMarkers[newHoleNo].setVisible(true);
+        this.currentHoleNo = newHoleNo;
+        super.flag = this.courseMarkers[this.currentHoleNo];
+
+        this.layoutDriver.setHoleNo(newHoleNo + 1);
+
+        if(newHoleNo <= 0){
+            this.layoutDriver.setNavState(LayoutDriver.NavState.BEGINNING);
+        }
+        else if(newHoleNo >= this.courseDetails.getHoles().length - 1){
+            this.layoutDriver.setNavState(LayoutDriver.NavState.END);
         }
         else{
-            LocationService.noPermissionsFinish(this);
+            this.layoutDriver.setNavState(LayoutDriver.NavState.MIDDLE);
         }
+
+        //Always reset the zoom and map when holes change
+        this.cancelUserAction();
+        this.updatePanel();
+        this.positionCamera();
     }
 
 }

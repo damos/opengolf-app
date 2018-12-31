@@ -4,7 +4,7 @@
         android:gravity="center"
         android:drawable="@drawable/button_background_floating" />
     <item
-        android:left="3dp"
+        android:left="4dp"
         android:gravity="center"
-        android:drawable="@drawable/vector_navigate_next_white" />
+        android:drawable="@drawable/vector_golf_hole_white" />
 </layer-list>

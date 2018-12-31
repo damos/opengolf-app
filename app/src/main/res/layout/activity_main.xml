@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/listBackground"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -8,68 +10,125 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/rectangle_background_gradient">
+        android:orientation="horizontal"
+        android:background="@drawable/rectangle_background_gradient"
+        android:descendantFocusability="beforeDescendants"
+        android:focusableInTouchMode="true">
 
-        <TextView
-            android:id="@+id/titleTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/title_activity_main"
-            android:textAlignment="center"
+        <EditText
+            android:id="@+id/searchBox"
+            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:drawableStart="@drawable/vector_search_white"
             android:textColor="@android:color/white"
-            android:textSize="35sp"
-            android:textStyle="bold" />
+            android:textColorHint="@color/transparentWhite"
+            android:backgroundTint="@android:color/white"
+            android:layout_margin="2dp"
+            android:drawablePadding="5dp"
+            android:maxLength="100"
+            android:textSize="20sp"
+            android:inputType="textPersonName"
+            android:imeOptions="actionSearch"
+            android:selectAllOnFocus="true"
+            android:maxLines="1"
+            android:hint="@string/searchHint"
+            />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <ImageView
+            android:id="@+id/refreshButton"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:descendantFocusability="beforeDescendants"
-            android:focusableInTouchMode="true">
-
-            <EditText
-                android:id="@+id/searchBox"
-                android:layout_margin="2dp"
-                android:padding="7dp"
-                android:layout_height="match_parent"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_gravity="center"
-                android:background="@drawable/rectangle_edit_text"
-                android:drawableLeft="@drawable/vector_search_transparent_black"
-                android:maxLength="200"
-                android:textSize="26sp"
-                android:inputType="textPersonName"
-                android:imeOptions="actionSearch"
-                android:maxLines="1"
-                />
-
-            <ImageView
-                android:id="@+id/locateButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:src="@drawable/button_locate" />
-
-        </LinearLayout>
+            android:padding="5dp"
+            android:src="@drawable/button_refresh" />
     </LinearLayout>
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/listOffWhite"
-        >
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <ListView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/courseListView"
-            android:padding="4sp"
-            android:divider="@color/listOffWhite"
-            android:dividerHeight="4sp" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/listBackground"
+            android:divider="@color/listBackground"
+            android:dividerHeight="4dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            tools:listitem="@layout/course_list_row"/>
 
     </android.support.v4.widget.SwipeRefreshLayout>
+
+    <TextView
+        android:id="@+id/noResults"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingTop="20dp"
+        android:textAlignment="center"
+        android:textColor="@color/colorTextSecondary"
+        android:text="@string/desc_no_results"
+        android:textSize="25sp"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/rectangle_background_white_top_bar"
+        android:paddingTop="10dp"
+        android:paddingBottom="5dp">
+
+        <RadioGroup
+            android:id="@+id/buttonPanel"
+            android:layout_weight="2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:checkedButton="@id/myLocation">
+
+            <RadioButton
+                android:id="@+id/myLocation"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/my_location"
+                android:textAlignment="center"
+                android:textColor="@color/radio_button_color_selector"
+                android:button="@null"
+                android:background="@drawable/button_background_clear_pressed_black"
+                android:drawableTop="@drawable/button_my_location"
+                />
+            <RadioButton
+                android:id="@+id/myCourses"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/my_courses"
+                android:textAlignment="center"
+                android:textColor="@color/radio_button_color_selector"
+                android:button="@null"
+                android:background="@drawable/button_background_clear_pressed_black"
+                android:drawableTop="@drawable/button_saved_courses"
+                android:enabled="false"
+                />
+        </RadioGroup>
+        <!-- Use a lone radio button here to ensure identical look and feel -->
+        <RadioButton
+            android:id="@+id/freeRoamButton"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/free_roam"
+            android:textAlignment="center"
+            android:textColor="@color/radio_button_color_selector"
+            android:button="@null"
+            android:background="@drawable/button_background_clear_pressed_black"
+            android:drawableTop="@drawable/button_free_roam"
+            />
+    </LinearLayout>
 
 </LinearLayout>

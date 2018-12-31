@@ -14,8 +14,11 @@ import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +31,7 @@ import com.google.android.gms.location.LocationResult;
 
 import ca.dait.opengolf.app.R;
 import ca.dait.opengolf.app.activities.coursemap.CourseMapActivity;
+import ca.dait.opengolf.app.activities.coursemap.FreeRoamMapActivity;
 import ca.dait.opengolf.app.gps.LocationService;
 import ca.dait.opengolf.app.http.EntityRequest;
 import ca.dait.opengolf.app.http.OpenGolfRequestQueue;
@@ -39,11 +43,16 @@ public class MainMenuActivity extends AppCompatActivity {
     private LocationService locationService;
     private SwipeRefreshLayout refreshLayout;
     private EditText searchBox;
+    private ListView listView;
+
+    private RadioGroup radioGroup;
+    private RadioButton myLocationButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.listView = this.findViewById(R.id.courseListView);
     }
 
     @Override
@@ -55,40 +64,44 @@ public class MainMenuActivity extends AppCompatActivity {
 
         this.refreshLayout = this.findViewById(R.id.swipeRefresh);
         this.refreshLayout.setColorSchemeColors(this.getResources().getColor(R.color.colorPrimaryDark));
-        this.refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                MainMenuActivity.this.showCourses();
-            }
-        });
+        this.refreshLayout.setOnRefreshListener(MainMenuActivity.this::showCourses);
 
-        View locateButton = this.findViewById(R.id.locateButton);
-        locateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MainMenuActivity.this.searchBox.setText("");
-                MainMenuActivity.this.showCourses();
-            }
-        });
+        View refreshButton = this.findViewById(R.id.refreshButton);
+        refreshButton.setOnClickListener(view -> MainMenuActivity.this.showCourses());
 
         this.searchBox = this.findViewById(R.id.searchBox);
-        this.searchBox.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_SEARCH){
-                    if(MainMenuActivity.this.searchBox.getText().toString().trim().length() > 0){
-                        MainMenuActivity.this.showCourses();
-                        return false;
-                    }
-                    else{
-                        TranslateAnimation shake = new TranslateAnimation(-5,5, 0, 0);
-                        shake.setDuration(300);
-                        shake.setInterpolator(new CycleInterpolator(3));
-                        MainMenuActivity.this.searchBox.startAnimation(shake);
-                        return true;
-                    }
+        this.searchBox.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
+            if(actionId == EditorInfo.IME_ACTION_SEARCH){
+                if(MainMenuActivity.this.searchBox.getText().toString().trim().length() > 0){
+                    this.radioGroup.clearCheck();
+                    MainMenuActivity.this.showCourses();
+                    return false;
                 }
-                return false;
+                else{
+                    TranslateAnimation shake = new TranslateAnimation(-5,5, 0, 0);
+                    shake.setDuration(300);
+                    shake.setInterpolator(new CycleInterpolator(3));
+                    MainMenuActivity.this.searchBox.startAnimation(shake);
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        //TODO: want to setup these event listeners properly
+        View freeRoamButton = this.findViewById(R.id.freeRoamButton);
+        freeRoamButton.setOnClickListener(view-> {
+            Intent intent = new Intent(MainMenuActivity.this, FreeRoamMapActivity.class);
+            startActivity(intent);
+            ((RadioButton)view).setChecked(false);
+        });
+
+        this.radioGroup = this.findViewById(R.id.buttonPanel);
+        this.myLocationButton = this.findViewById(R.id.myLocation);
+        this.myLocationButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked) {
+                this.searchBox.setText("");
+                this.showCourses();
             }
         });
 
@@ -125,14 +138,9 @@ public class MainMenuActivity extends AppCompatActivity {
                                 new Response.Listener<CourseSearchResult>() {
                                     @Override
                                     public void onResponse(CourseSearchResult response) {
-                                        if(response.getResults().length > 0) {
-                                            ListView listView = MainMenuActivity.this.findViewById(R.id.courseListView);
-                                            listView.setAdapter(MainMenuActivity.this.new CourseListAdapter(response));
-                                        }
-                                        else{
-                                            ListView listView = MainMenuActivity.this.findViewById(R.id.courseListView);
-                                            listView.setAdapter(MainMenuActivity.this.new NoResultsListAdapter());
-                                        }
+                                        MainMenuActivity.this.listView.setAdapter(MainMenuActivity.this.new CourseListAdapter(response));
+                                        MainMenuActivity.this.listView.setEmptyView(
+                                                MainMenuActivity.this.findViewById(R.id.noResults));
                                         MainMenuActivity.this.refreshLayout.setRefreshing(false);
                                     }
                                 },
@@ -141,7 +149,6 @@ public class MainMenuActivity extends AppCompatActivity {
                                     public void onErrorResponse(VolleyError error) {
                                         Toast.makeText(MainMenuActivity.this, "Unable to find nearby courses.",
                                                 Toast.LENGTH_SHORT).show();
-
                                         MainMenuActivity.this.refreshLayout.setRefreshing(false);
                                     }
                                 }
@@ -162,25 +169,6 @@ public class MainMenuActivity extends AppCompatActivity {
         }
         else{
             LocationService.noPermissionsFinish(this);
-        }
-    }
-
-    private class NoResultsListAdapter extends BaseAdapter{
-
-        @Override
-        public int getCount() { return 1;}
-
-        @Override
-        public Object getItem(int i) { return null; }
-
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
-
-        @Override
-        public View getView(final int i, View view, ViewGroup viewGroup) {
-            return getLayoutInflater().inflate(R.layout.course_list_noresults, null);
         }
     }
 

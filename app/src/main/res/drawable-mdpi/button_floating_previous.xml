@@ -6,7 +6,5 @@
     <item
         android:right="3dp"
         android:gravity="center"
-        android:width="50dp"
-        android:height="40dp"
         android:drawable="@drawable/vector_navigate_before_white" />
 </layer-list>

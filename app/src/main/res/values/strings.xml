@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">Open Golf</string>
-    <string name="title_activity_main">Open Golf</string>
     <string name="desc_no_results">No results…</string>
+    <string name="my_location">My Location</string>
+    <string name="my_courses">My Courses (Soon)</string>
+    <string name="free_roam">Free Roam</string>
+    <string name="searchHint">Search</string>
+    <string name="sample">sample</string>
 </resources>

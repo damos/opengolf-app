@@ -15,6 +15,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
@@ -28,6 +29,7 @@ public class LocationService {
     public static final int PERMISSION_REQUEST_CODE = 1;
 
     private final Activity activity;
+    private final GoogleMap googleMap; //Set's myLocationEnabled inside the permission check.
     private final LocationCallback callback;
     private final LocationRequest locationRequest;
 
@@ -36,7 +38,12 @@ public class LocationService {
     private final LocationSettingsRequest settingsRequest;
 
     public LocationService(Activity activity, LocationRequest locationRequest, LocationCallback callback) {
+       this(activity, null, locationRequest, callback);
+    }
+
+    public LocationService(Activity activity, GoogleMap googleMap, LocationRequest locationRequest, LocationCallback callback) {
         this.activity = activity;
+        this.googleMap = googleMap;
         this.locationRequest = locationRequest;
         this.callback = callback;
 
@@ -46,32 +53,30 @@ public class LocationService {
                 .addLocationRequest(this.locationRequest).build();
     }
 
+
     public void start() {
 
         this.settingsClient.checkLocationSettings(this.settingsRequest)
-                .addOnSuccessListener(new OnSuccessListener<LocationSettingsResponse>() {
-                    @Override
-                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                        if (ActivityCompat.checkSelfPermission(LocationService.this.activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                                ActivityCompat.checkSelfPermission(LocationService.this.activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            .addOnSuccessListener((locationSettingsResponse) -> {
+                if (ActivityCompat.checkSelfPermission(LocationService.this.activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(LocationService.this.activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-                            ActivityCompat.requestPermissions(LocationService.this.activity,
-                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_CODE);
+                    ActivityCompat.requestPermissions(LocationService.this.activity,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_CODE);
 
-                        } else {
-                            LocationService.this.locationClient.requestLocationUpdates(
-                                    LocationService.this.locationRequest, LocationService.this.callback, Looper.myLooper());
-                        }
+                } else {
+                    if(this.googleMap != null){
+                        this.googleMap.setMyLocationEnabled(true);
                     }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(LocationService.this.activity, "Check Location Settings Failed!", Toast.LENGTH_SHORT).show();
-                        LocationService.this.activity.finish();
-                    }
-                });
+                    LocationService.this.locationClient.requestLocationUpdates(
+                            LocationService.this.locationRequest, LocationService.this.callback, Looper.myLooper());
+                }
+            })
+            .addOnFailureListener((exception) -> {
+                Toast.makeText(LocationService.this.activity, "Check Location Settings Failed!", Toast.LENGTH_SHORT).show();
+                LocationService.this.activity.finish();
+            });
     }
 
     public void stop() {

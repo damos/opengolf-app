@@ -1,5 +1,6 @@
 package ca.dait.opengolf.app.activities.coursemap;
 
+import android.app.Activity;
 import android.view.View;
 import android.widget.TextView;
 
@@ -18,19 +19,23 @@ public class LayoutDriver {
     private final View nextButton;
     private final View cancelButton;
     private final View waypointButton;
+    private final View golfHoleButton;
+    private final TextView courseTitle;
     private final TextView holeNo;
     private final TextView curLocToGreen;
     private final TextView pointToGreen;
     private final TextView curLocToPoint;
     private final View spinner;
 
-    LayoutDriver(CourseMapActivity activity){
+    LayoutDriver(Activity activity){
+        this.courseTitle = activity.findViewById(R.id.courseTitle);
         this.holeNo = activity.findViewById(R.id.holeNo);
         this.startButton = activity.findViewById(R.id.startButton);
         this.prevButton = activity.findViewById(R.id.prevButton);
         this.nextButton = activity.findViewById(R.id.nextButton);
         this.cancelButton = activity.findViewById(R.id.cancelButton);
         this.waypointButton = activity.findViewById(R.id.waypointButton);
+        this.golfHoleButton = activity.findViewById(R.id.golfHoleButton);
         this.curLocToGreen = activity.findViewById(R.id.curLocToGreen);
         this.pointToGreen = activity.findViewById(R.id.pointToGreen);
         this.curLocToPoint = activity.findViewById(R.id.curLocToPoint);
@@ -55,6 +60,41 @@ public class LayoutDriver {
 
     public void setStartButtonListener(View.OnClickListener listener){
         this.startButton.setOnClickListener(listener);
+    }
+
+    public void setGolfHoleButtonListener(View.OnClickListener listener){
+        this.golfHoleButton.setOnClickListener(listener);
+    }
+
+    public void setCourseTitle(String courseTitle){
+        this.courseTitle.setText(courseTitle);
+        this.courseTitle.setVisibility(View.VISIBLE);
+    }
+
+    public void clearCourseTitle(){
+        this.courseTitle.setText("");
+        this.courseTitle.setVisibility(View.GONE);
+    }
+
+    public void clearControls(){
+        this.spinner.setVisibility(View.GONE);
+        this.startButton.setVisibility(View.GONE);
+        this.prevButton.setVisibility(View.GONE);
+        this.nextButton.setVisibility(View.GONE);
+        this.cancelButton.setVisibility(View.GONE);
+        this.waypointButton.setVisibility(View.GONE);
+        this.golfHoleButton.setVisibility(View.GONE);
+    }
+
+    public void showGolfHoleButton(){
+        this.golfHoleButton.setVisibility(View.VISIBLE);
+    }
+    public void hideGolfHoleButton(){
+        this.golfHoleButton.setVisibility(View.GONE);
+    }
+
+    public void showStartButton(){
+        this.startButton.setVisibility(View.VISIBLE);
     }
 
     public void hideStartButton(){
@@ -85,8 +125,15 @@ public class LayoutDriver {
         this.cancelButton.setVisibility(View.GONE);
     }
 
+    public void setGreenDistance(int distance){
+        this.setGreenDistance(distance, 0);
+    }
+
     public void setGreenDistance(int distance, int accuracy){
-        if(accuracy > 1){
+        if(distance < 0){
+            this.curLocToGreen.setText("");
+        }
+        else if(accuracy > 1){
             this.curLocToGreen.setText(distance + "±" + accuracy + "y");
         }
         else{
