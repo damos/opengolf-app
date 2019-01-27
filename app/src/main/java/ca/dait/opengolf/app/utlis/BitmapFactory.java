@@ -16,7 +16,6 @@ public class BitmapFactory {
     }
 
     public static Bitmap fromDrawable(Drawable drawable){
-        //Drawable drawable = MapDriver.this.mapView.getResources().getDrawable(R.drawable.ic_waypoint);
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas();
         canvas.setBitmap(bitmap);

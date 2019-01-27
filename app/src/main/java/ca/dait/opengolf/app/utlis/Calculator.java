@@ -23,6 +23,10 @@ public class Calculator {
         return Math.round((float)meters * YARDS_FACTOR);
     }
 
+    public static int getMeters(double yards){
+        return Math.round((float)yards / YARDS_FACTOR);
+    }
+
     public static float getPixelsFromDp(float dp){
         return dp * Resources.getSystem().getDisplayMetrics().density;
     }

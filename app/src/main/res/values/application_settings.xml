@@ -4,15 +4,24 @@
     <integer name="locationFastestInterval">2000</integer>
     <integer name="locationDistance">1</integer>
 
-    <string name="defaultZoom">18.0</string>
-    <string name="coursePreviewZoom">14.0</string>
+    <integer name="coursePreviewPadding">100</integer>
+
+    <string name="zoomStartup">14</string>
+    <string name="zoomDefault">17.5</string>
+    <string name="zoomDefineCourseFound">16.0</string>
     <string name="waypointLineDp">5.7</string>
     <string name="anchorFlagIconX">0.27</string>
     <string name="anchorFlagIconY">0.95</string>
 
+    <integer name="dragShiftY">-50</integer>
 
-    <string name="url_search">https://opengolf.darinamos.ca/api/course/search?lat=%f&amp;lon=%f&amp;searchTerm=%s</string>
+    <string name="url_search">https://opengolf.darinamos.ca/api/course/search</string>
+    <string name="url_searchByLoc">https://opengolf.darinamos.ca/api/course/search?lat=%f&amp;lon=%f</string>
+    <string name="url_searchTerm">https://opengolf.darinamos.ca/api/course/search?searchTerm=%s</string>
+    <string name="url_searchTermWithLoc">https://opengolf.darinamos.ca/api/course/search?searchTerm=%s&amp;lat=%f&amp;lon=%f</string>
     <string name="url_getCourse">https://opengolf.darinamos.ca/api/course/%s</string>
 
     <string name="courseId">courseId</string>
+
+    <integer name="strokeYardageDp">4</integer>
 </resources>

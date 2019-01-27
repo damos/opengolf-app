@@ -1,20 +1,56 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/listBackground"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="ContentDescription">
+
+    <fragment
+        android:id="@+id/courseMap"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@drawable/rectangle_background_gradient"
-        android:descendantFocusability="beforeDescendants"
-        android:focusableInTouchMode="true">
+        android:orientation="vertical"
+        android:layout_gravity="top|center_horizontal">
+        <TextView
+            android:id="@+id/courseTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:includeFontPadding="false"
+            android:textSize="25sp"
+            android:textColor="@android:color/white"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="3"
+            android:shadowDy="3"
+            android:shadowRadius="3"
+            android:layout_margin="10dp"
+            android:text="@string/sample"
+            android:visibility="gone"
+            tools:visibility="visible"/>
 
+        <EditText
+            android:id="@+id/courseNickname"
+            android:layout_width="220dp"
+            android:layout_height="match_parent"
+            android:padding="5dp"
+            android:layout_marginTop="10dp"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/darker_gray"
+            android:backgroundTint="@android:color/darker_gray"
+            android:maxLines="1"
+            android:maxLength="100"
+            android:selectAllOnFocus="true"
+            android:inputType="textPersonName"
+            android:imeOptions="actionDone"
+            android:hint="@string/nicknameHint"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+<!--
         <EditText
             android:id="@+id/searchBox"
             android:layout_height="match_parent"
@@ -34,101 +70,185 @@
             android:maxLines="1"
             android:hint="@string/searchHint"
             />
-
-        <ImageView
-            android:id="@+id/refreshButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="5dp"
-            android:src="@drawable/button_refresh" />
+            -->
     </LinearLayout>
-
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefresh"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <ListView
-            android:id="@+id/courseListView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/listBackground"
-            android:divider="@color/listBackground"
-            android:dividerHeight="4dp"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
-            tools:listitem="@layout/course_list_row"/>
-
-    </android.support.v4.widget.SwipeRefreshLayout>
-
-    <TextView
-        android:id="@+id/noResults"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingTop="20dp"
-        android:textAlignment="center"
-        android:textColor="@color/colorTextSecondary"
-        android:text="@string/desc_no_results"
-        android:textSize="25sp"
-        android:visibility="gone"/>
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@drawable/rectangle_background_white_top_bar"
-        android:paddingTop="10dp"
-        android:paddingBottom="5dp">
+        android:orientation="vertical"
+        android:layout_gravity="top|start"
+        android:padding="5dp">
 
-        <RadioGroup
-            android:id="@+id/buttonPanel"
-            android:layout_weight="2"
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/distancePanel1"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:checkedButton="@id/myLocation">
+            android:includeFontPadding="false"
+            android:textSize="25sp"
+            android:textColor="@android:color/white"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="3"
+            android:shadowDy="3"
+            android:shadowRadius="3"
+            android:text="@string/sample"
+            android:visibility="gone"
+            tools:visibility="visible"/>
 
-            <RadioButton
-                android:id="@+id/myLocation"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="@string/my_location"
-                android:textAlignment="center"
-                android:textColor="@color/radio_button_color_selector"
-                android:button="@null"
-                android:background="@drawable/button_background_clear_pressed_black"
-                android:drawableTop="@drawable/button_my_location"
-                />
-            <RadioButton
-                android:id="@+id/myCourses"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="@string/my_courses"
-                android:textAlignment="center"
-                android:textColor="@color/radio_button_color_selector"
-                android:button="@null"
-                android:background="@drawable/button_background_clear_pressed_black"
-                android:drawableTop="@drawable/button_saved_courses"
-                android:enabled="false"
-                />
-        </RadioGroup>
-        <!-- Use a lone radio button here to ensure identical look and feel -->
-        <RadioButton
-            android:id="@+id/freeRoamButton"
-            android:layout_weight="1"
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/distancePanel2"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/free_roam"
-            android:textAlignment="center"
-            android:textColor="@color/radio_button_color_selector"
-            android:button="@null"
-            android:background="@drawable/button_background_clear_pressed_black"
-            android:drawableTop="@drawable/button_free_roam"
-            />
+            android:includeFontPadding="false"
+            android:textSize="25sp"
+            android:textColor="@android:color/white"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="3"
+            android:shadowDy="3"
+            android:shadowRadius="3"
+            android:text="@string/sample"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <TextView
+            android:id="@+id/distancePanel3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:textSize="25sp"
+            android:textColor="@android:color/white"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="3"
+            android:shadowDy="3"
+            android:shadowRadius="3"
+            android:text="@string/sample"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
     </LinearLayout>
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/holeNo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:includeFontPadding="false"
+        android:textSize="50sp"
+        android:textColor="@android:color/white"
+        android:shadowColor="@android:color/black"
+        android:shadowDx="3"
+        android:shadowDy="3"
+        android:shadowRadius="3"
+        android:text="@string/sampleNum"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
+    <!-- Using padding instead of margin for the button panel to help guard from
+         misclicks registering as map view clicks. The layout is defined as clickable
+         to keep clicking form passing through. -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom|start"
+        android:paddingTop="5dp"
+        android:paddingBottom="40dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:id="@+id/prevButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/button_floating_previous"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/spinner"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center|center"
+        android:indeterminateTint="@color/colorPrimaryDark"
+        android:background="@drawable/background_progress_circle"
+        android:indeterminate="true"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
+    <ImageView
+        android:id="@+id/startButton"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="40dp"
+        android:src="@drawable/button_floating_start"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <!-- Using padding instead of margin for the button panel to help guard from
+     misclicks registering as map view clicks. The layout is defined as clickable
+     to keep clicking form passing through. -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom|end"
+        android:paddingTop="5dp"
+        android:paddingBottom="40dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:id="@+id/waypointButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/button_floating_waypoint"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <ImageView
+            android:id="@+id/doneButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/button_floating_done"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <ImageView
+            android:id="@+id/flagButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/button_floating_golfhole"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <ImageView
+            android:id="@+id/cancelButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/button_floating_cancel"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <ImageView
+            android:id="@+id/nextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/button_floating_next"
+            android:layout_marginTop="5dp"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+    </LinearLayout>
+
+</android.support.design.widget.CoordinatorLayout>

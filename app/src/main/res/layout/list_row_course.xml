@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/background_menu_item_selectable"
+    android:padding="@dimen/MenuItemRadius">
+
+    <TextView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/courseName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/MenuItemRadius"
+        android:layout_marginEnd="@dimen/MenuItemRadius"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="@dimen/MenuItemPrimaryTextSize"
+        android:text="@string/sample"/>
+
+    <TextView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/courseCountry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/MenuItemRadius"
+        android:layout_marginEnd="@dimen/MenuItemRadius"
+        android:textColor="@color/colorTextSecondary"
+        android:textSize="@dimen/MenuItemSecondaryTextSize"
+        android:text="@string/sample"/>
+
+</LinearLayout>

@@ -1,38 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="transparentWhite">#99FFFFFF</color>
-    <color name="transparentBlack">#22000000</color>
-
- <!--
-
-Blue
-    <color name="colorPrimary">#07259C</color>
-    <color name="colorPrimaryDark">#001089</color>
-
-
-    <color name="colorFloatingButtonOutline">#CC8282FF</color>
-    <color name="colorFloatingButtonBackGround">#AA07259C</color>
-    <color name="colorFloatingButtonPressedBackGround">#EE07259C</color>
-
-Green
-    <color name="colorPrimary">#085C04</color>
-    <color name="colorPrimaryDark">#044004</color>
-
-    <color name="colorPrimary">#085C04</color>
-    <color name="colorPrimaryDark">#044004</color>
-
-    <color name="colorFloatingButtonOutline">#CC005C00</color>
-    <color name="colorFloatingButtonBackGround">#AA005C00</color>
-    <color name="colorFloatingButtonPressedBackGround">#EE005C00</color>
-
-Red:
-    <color name="colorPrimary">#700000</color>
-    <color name="colorPrimaryDark">#500000</color>
-
--->
+    <color name="hintTransparentBlack">#AA000000</color>
+    <color name="radioButtonPressHighlight">#22000000</color>
 
     <color name="colorPrimary">#306000</color>
     <color name="colorPrimaryDark">#102000</color>
+    <color name="colorPrimaryDarkDivider">#DD102000</color>
+    <color name="colorPrimaryTint">#AADAFAAA</color>
+
+    <color name="colorMenuWhiteTransparent">#DDFFFFFF</color>
 
     <color name="colorFloatingButtonOutline">#CC8282FF</color>
     <color name="colorFloatingButtonBackGround">#AA07259C</color>
@@ -43,7 +19,7 @@ Red:
     <color name="colorTextPrimary">@android:color/black</color>
     <color name="colorTextSecondary">#99000000</color>
 
-    <color name="listNoResultsText">#EE07259C</color>
-    <color name="listBackground">#0507259C</color>
-    <color name="listItemPressed">#1007259C</color>
+    <color name="stroke100y">#55FF0000</color>
+    <color name="stroke150y">#55FFFFFF</color>
+    <color name="stroke200y">#550000FF</color>
 </resources>

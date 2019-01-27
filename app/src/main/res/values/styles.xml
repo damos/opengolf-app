@@ -1,5 +1,10 @@
 <resources>
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryDark">@android:color/black</item>
     </style>
+
+    <dimen name="MenuItemRadius">7dp</dimen>
+    <dimen name="MenuItemPrimaryTextSize">24sp</dimen>
+    <dimen name="MenuItemSecondaryTextSize">16sp</dimen>
+
 </resources>

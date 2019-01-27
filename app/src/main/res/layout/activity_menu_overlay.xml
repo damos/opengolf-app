@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="40dp"
+    android:layout_marginStart="10dp"
+    android:layout_marginEnd="10dp"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true">
+
+    <EditText
+        android:id="@+id/searchBox"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:drawableStart="@drawable/vector_search"
+        android:textColor="@color/colorTextPrimary"
+        android:textColorHint="@color/hintTransparentBlack"
+        android:background="@drawable/background_menu_item"
+        android:maxLength="100"
+        android:textSize="@dimen/MenuItemPrimaryTextSize"
+        android:inputType="textPersonName"
+        android:imeOptions="actionSearch"
+        android:selectAllOnFocus="true"
+        android:maxLines="1"
+        android:paddingStart="@dimen/MenuItemRadius"
+        android:paddingEnd="@dimen/MenuItemRadius"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:hint="@string/searchHint"
+        />
+
+    <LinearLayout
+        android:id="@+id/noResults"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/background_menu_item"
+        android:focusable="true"
+        android:clickable="true"
+        android:padding="@dimen/MenuItemRadius"
+        android:layout_marginTop="10dp"
+        android:visibility="gone">
+        <TextView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/courseName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorTextPrimary"
+            android:textSize="@dimen/MenuItemPrimaryTextSize"
+            android:textAlignment="center"
+            android:text="@string/desc_no_results"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp">
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ListView
+                tools:listitem="@layout/list_row_course"
+                android:id="@+id/courseListView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@drawable/background_menu_divider"
+                android:dividerHeight="1dp"
+                android:listSelector="@android:color/transparent"
+                />
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/background_menu_item"
+        android:paddingTop="10dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="5dp">
+
+        <RadioGroup
+            android:id="@+id/buttonPanel"
+            android:layout_weight="2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:checkedButton="@id/radioButtonMyCourses">
+
+            <RadioButton
+                android:id="@+id/radioButtonMyCourses"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/my_courses"
+                android:textAlignment="center"
+                android:textColor="@color/radio_button_color_selector"
+                android:button="@null"
+                android:drawableTop="@drawable/button_saved_courses"
+                android:enabled="true"
+                />
+
+            <RadioButton
+                android:id="@+id/radioButtonNearMe"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/near_me"
+                android:textAlignment="center"
+                android:textColor="@color/radio_button_color_selector"
+                android:button="@null"
+                android:drawableTop="@drawable/button_my_location"
+                />
+
+        </RadioGroup>
+        <!-- Use a lone radio button here to ensure identical look and feel -->
+        <RadioButton
+            android:id="@+id/buttonFreeRoam"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/free_roam"
+            android:textAlignment="center"
+            android:textColor="@color/radio_button_color_selector"
+            android:button="@null"
+            android:drawableTop="@drawable/button_free_roam"
+            />
+    </LinearLayout>
+</LinearLayout>
