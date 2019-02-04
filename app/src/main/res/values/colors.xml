@@ -6,9 +6,9 @@
     <color name="colorPrimary">#306000</color>
     <color name="colorPrimaryDark">#102000</color>
     <color name="colorPrimaryDarkDivider">#DD102000</color>
-    <color name="colorPrimaryTint">#AADAFAAA</color>
 
-    <color name="colorMenuWhiteTransparent">#DDFFFFFF</color>
+    <color name="colorMenuWhiteTransparent">#EEFFFFFF</color>
+    <color name="colorMenuWhiteTransparentPressed">#CCFFFFFF</color>
 
     <color name="colorFloatingButtonOutline">#CC8282FF</color>
     <color name="colorFloatingButtonBackGround">#AA07259C</color>

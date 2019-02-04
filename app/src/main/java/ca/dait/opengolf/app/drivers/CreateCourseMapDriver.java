@@ -66,7 +66,7 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
 
     @Override
     public boolean canRestart(Intent intent){
-        return intent.getIntExtra(MenuOverlayActivity.RESULT, -1) == MenuOverlayActivity.RESULT_CREATE_COURSE
+        return intent.getIntExtra(MenuOverlayActivity.INTENT_EXTRA_RESULT, -1) == MenuOverlayActivity.INTENT_RESULT_CREATE_COURSE
                 && this.canResume;
     }
 

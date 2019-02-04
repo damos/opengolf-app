@@ -206,7 +206,9 @@ public abstract class AbstractLayoutDriver {
      * @param holeNo
      */
     protected void setHoleNo(int holeNo){
-        this.showText(Panel.HOLE_NO,"#" + holeNo);
+        //this.showText(Panel.HOLE_NO,"#" + holeNo);
+        //Try not displaying #
+        this.showText(Panel.HOLE_NO, String.valueOf(holeNo));
     }
 
     protected void setClickListener(Button button, View.OnClickListener listener) {

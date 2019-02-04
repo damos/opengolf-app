@@ -34,27 +34,59 @@
         />
 
     <LinearLayout
-        android:id="@+id/noResults"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/background_menu_item"
-        android:focusable="true"
-        android:clickable="true"
-        android:padding="@dimen/MenuItemRadius"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:layout_marginTop="10dp"
-        android:visibility="gone">
+        android:layout_marginBottom="10dp">
+
         <TextView
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/courseName"
+            android:id="@+id/createCourseDefinition"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:padding="10dp"
             android:textColor="@color/colorTextPrimary"
             android:textSize="@dimen/MenuItemPrimaryTextSize"
             android:textAlignment="center"
-            android:text="@string/desc_no_results"/>
+            android:background="@drawable/background_menu_item_selectable"
+            android:text="@string/createCourse"
+            android:visibility="gone"
+            android:layout_marginBottom="1dp"
+            tools:visibility="visible"/>
+
+        <TextView
+            android:id="@+id/noResults"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:textColor="@color/colorTextPrimary"
+            android:textSize="@dimen/MenuItemPrimaryTextSize"
+            android:textAlignment="center"
+            android:background="@drawable/background_menu_item"
+            android:text="@string/desc_no_results"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ListView
+                tools:listitem="@layout/list_row_course"
+                android:id="@+id/courseListView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:dividerHeight="1dp"
+                android:divider="@android:color/transparent"
+                android:listSelector="@android:color/transparent"
+                />
+        </android.support.v4.widget.SwipeRefreshLayout>
+
     </LinearLayout>
 
+    <!--
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -80,6 +112,7 @@
         </android.support.v4.widget.SwipeRefreshLayout>
 
     </LinearLayout>
+    -->
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -92,7 +125,7 @@
         android:paddingBottom="5dp">
 
         <RadioGroup
-            android:id="@+id/buttonPanel"
+            android:id="@+id/radioGroup"
             android:layout_weight="2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

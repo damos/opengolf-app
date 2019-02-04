@@ -3,18 +3,18 @@ package ca.dait.opengolf.app.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.CycleInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -31,13 +31,10 @@ import com.google.gson.Gson;
 import com.google.maps.android.SphericalUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import ca.dait.opengolf.app.R;
 import ca.dait.opengolf.app.network.EntityRequest;
@@ -48,31 +45,34 @@ import ca.dait.opengolf.entities.course.CourseSearchResult;
 
 public class MenuOverlayActivity extends FragmentActivity {
 
-    public final static String RESULT = "result";
-    public final static String COURSE = "course";
-    public final static String COURSE_ID = "courseId";
-    public final static int RESULT_FREE_ROAM = 1;
-    public final static int RESULT_CREATE_COURSE = 2;
-    public final static int RESULT_PLAY_COURSE = 3;
+    public final static String INTENT_EXTRA_RESULT = "result";
+    public final static String INTENT_EXTRA_COURSE = "course";
+    public final static String INTENT_EXTRA_COURSE_ID = "courseId";
+    public final static String INTENT_EXTRA_LOCATION = "Location";
 
-    public final static String LOCATION = "Location";
+    public final static int INTENT_RESULT_FREE_ROAM = 1;
+    public final static int INTENT_RESULT_CREATE_COURSE = 2;
+    public final static int INTENT_RESULT_PLAY_COURSE = 3;
+
     protected LatLng position;
 
     protected RequestQueue requestQueue;
     protected JsonRepository repo;
 
     protected EditText searchBox;
-    protected View noResults;
+    protected View courseListHeader;
+    protected View courseListEmptyView;
     protected ListView courseListView;
-    protected View createCourseView;
-    protected RadioGroup buttonPanel;
     protected SwipeRefreshLayout refreshLayout;
+
+    protected RadioGroup radioGroup;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu_overlay);
-        this.position = this.getIntent().getParcelableExtra(LOCATION);
+        this.position = this.getIntent().getParcelableExtra(INTENT_EXTRA_LOCATION);
 
         this.requestQueue = RequestQueueManager.getInstance(this.getApplicationContext());
         this.repo = JsonRepository.getInstance(this.getApplicationContext());
@@ -103,11 +103,12 @@ public class MenuOverlayActivity extends FragmentActivity {
             }
             return false;
         });
-        this.courseListView = this.findViewById(R.id.courseListView);
-        this.noResults = this.findViewById(R.id.noResults);
 
-        this.buttonPanel = this.findViewById(R.id.buttonPanel);
-        this.buttonPanel.setOnCheckedChangeListener((group, checkedId) ->{
+        this.courseListView = this.findViewById(R.id.courseListView);
+        this.courseListEmptyView = this.findViewById(R.id.noResults);
+
+        this.radioGroup = this.findViewById(R.id.radioGroup);
+        this.radioGroup.setOnCheckedChangeListener((group, checkedId) ->{
             switch(checkedId){
                 case R.id.radioButtonMyCourses:
                     this.showSavedCourses();
@@ -118,11 +119,12 @@ public class MenuOverlayActivity extends FragmentActivity {
             }
         });
 
+
         this.refreshLayout = this.findViewById(R.id.swipeRefreshLayout);
         this.refreshLayout.setColorSchemeColors(this.getColor(R.color.colorPrimary),
                                                 this.getColor(R.color.colorPrimaryDark));
         this.refreshLayout.setOnRefreshListener(() ->{
-            switch(this.buttonPanel.getCheckedRadioButtonId()){
+            switch(this.radioGroup.getCheckedRadioButtonId()){
                 case R.id.radioButtonMyCourses:
                     this.refreshLayout.setRefreshing(false); //No need to swipe to refresh local storage
                     break;
@@ -134,17 +136,17 @@ public class MenuOverlayActivity extends FragmentActivity {
             }
         });
 
-        this.createCourseView = getLayoutInflater().inflate(R.layout.list_row_create_course, this.courseListView, false);
-        this.createCourseView.setOnClickListener(view -> {
+        this.courseListHeader = this.findViewById(R.id.createCourseDefinition);
+        this.courseListHeader.setOnClickListener(view -> {
             Intent output = new Intent();
-            output.putExtra(RESULT, RESULT_CREATE_COURSE);
+            output.putExtra(INTENT_EXTRA_RESULT, INTENT_RESULT_CREATE_COURSE);
             this.setResult(RESULT_OK, output);
             this.finish();
         });
 
         this.findViewById(R.id.buttonFreeRoam).setOnClickListener(view -> {
             Intent output = new Intent();
-            output.putExtra(RESULT, RESULT_FREE_ROAM);
+            output.putExtra(INTENT_EXTRA_RESULT, INTENT_RESULT_FREE_ROAM);
             this.setResult(RESULT_OK, output);
             this.finish();
         });
@@ -158,13 +160,13 @@ public class MenuOverlayActivity extends FragmentActivity {
         }
         this.refreshLayout.setRefreshing(true);
 
-        this.noResults.setVisibility(View.GONE);
-        this.courseListView.setEmptyView(null);
+        this.courseListEmptyView.setVisibility(View.GONE);
 
         this.repo.getAll(Course.class, JsonRepository.TYPE_COURSE, results ->{
 
             if(results.size() == 0){
-                this.courseListView.setAdapter(new CourseListAdapter());
+                this.refreshLayout.setRefreshing(false);
+                this.courseListView.setAdapter(new CourseListAdapter(false, true));
                 return;
             }
 
@@ -204,18 +206,16 @@ public class MenuOverlayActivity extends FragmentActivity {
                         else{
                             finalCourses.sort(Comparator.comparing((entity) -> entity.ref.getDistance()));
                         }
-                        if(this.courseListView.getHeaderViewsCount() == 0) {
-                            this.courseListView.addHeaderView(this.createCourseView);
-                        }
-                        this.courseListView.setAdapter(new CourseListAdapter(finalCourses));
-                        this.courseListView.setOnItemClickListener(this::onCourseMenuItemClick);
                         this.refreshLayout.setRefreshing(false);
+                        this.courseListView.setAdapter(new CourseListAdapter(
+                                finalCourses,false, true
+                        ));
                     });
         });
     }
 
     protected void showSearchResults(){
-        this.buttonPanel.clearCheck();
+        this.radioGroup.clearCheck();
         if(this.searchBox.hasFocus()){
             this.searchBox.clearFocus();
         }
@@ -238,16 +238,12 @@ public class MenuOverlayActivity extends FragmentActivity {
 
     protected void searchRemoteCourses(String url){
         this.refreshLayout.setRefreshing(true);
-        this.courseListView.setEmptyView(this.noResults);
 
         EntityRequest<CourseSearchResult> request =
             new EntityRequest<>(CourseSearchResult.class, Request.Method.GET, url,
                 response ->{
-                    if(this.courseListView.getHeaderViewsCount() > 0) {
-                        this.courseListView.removeHeaderView(this.createCourseView);
-                    }
-                    this.courseListView.setAdapter(this.new CourseListAdapter(response.getResults()));
-                    this.courseListView.setOnItemClickListener(this::onCourseMenuItemClick);
+                    this.courseListView.setAdapter(
+                            new CourseListAdapter(response.getResults(), true, false));
                     this.refreshLayout.setRefreshing(false);
                 },
                 error ->{
@@ -259,91 +255,185 @@ public class MenuOverlayActivity extends FragmentActivity {
         this.requestQueue.add(request);
     }
 
-    public void onCourseMenuItemClick(AdapterView<?> parent, View view, int position, long id){
-        Object course = parent.getAdapter().getItem(position);
-        Intent output = new Intent();
-        output.putExtra(RESULT, RESULT_PLAY_COURSE);
-        output.putExtra(COURSE_ID, view.getTag().toString());
-        output.putExtra(COURSE, new Gson().toJson(course));
-        this.setResult(RESULT_OK, output);
-        this.finish();
-    }
-
     @Override
     public void onBackPressed(){
         super.onBackPressed();
         this.overridePendingTransition(0,0);
     }
 
-    private class CourseListAdapter extends BaseAdapter {
+    private class CourseListAdapter extends BaseAdapter{
         private static final String LOCALE = "%s, %s, %s";
         private static final String LOCALE_WITH_DISTANCE = "%s, %s, %s - %s";
 
         private final String ids[];
         private final Course courses[];
 
-        private CourseListAdapter(){
-            this.ids = new String[]{};
-            this.courses = new Course[]{};
-        }
-
-        private CourseListAdapter(Course courses[]){
-            this.courses = courses;
+        CourseListAdapter(@NonNull Course courses[], boolean showEmptyView, boolean showHeader){
             this.ids = new String[courses.length];
+            this.courses = courses;
             for(int i = 0; i < this.ids.length; i++){
                 this.ids[i] = "remote_" + this.courses[i].getRemoteId();
             }
+            this.setViews(showEmptyView, showHeader);
         }
 
-        private CourseListAdapter(List<JsonRepository.JsonEntity<Course>> courses){
+        CourseListAdapter(boolean showEmptyView, boolean showHeader){
+            this(new Course[]{}, showEmptyView, showHeader);
+        }
+
+        CourseListAdapter(@NonNull List<JsonRepository.JsonEntity<Course>> courses,
+                          boolean showEmptyView, boolean showHeader){
             this.courses = courses.stream()
                     .map(entity -> entity.ref)
                     .toArray(Course[]::new);
             this.ids = courses.stream()
                     .map(entity -> "saved_" + String.valueOf(entity.id))
                     .toArray(String[]::new);
+            this.setViews(showEmptyView, showHeader);
+        }
+
+        private void setViews(boolean showEmptyView, boolean showHeader) {
+            MenuOverlayActivity.this.courseListEmptyView.setVisibility(
+                    (showEmptyView && courses.length == 0) ? View.VISIBLE : View.GONE);
+            MenuOverlayActivity.this.courseListHeader.setVisibility(
+                    showHeader ? View.VISIBLE : View.GONE);
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup viewGroup) {
+            if (convertView == null) {
+                convertView = getLayoutInflater().inflate(R.layout.list_row_course, viewGroup, false);
+            }
+            convertView.setTag(position);
+            TextView primaryTextView = convertView.findViewById(R.id.courseName);
+            TextView altTextView = convertView.findViewById(R.id.courseCountry);
+
+            primaryTextView.setText(this.courses[position].getFullName());
+            Double distanceInM = this.courses[position].getDistance();
+            altTextView.setText(
+                    (distanceInM == null) ?
+                            String.format(LOCALE, this.courses[position].getMunicipality(),
+                                    this.courses[position].getState(),this.courses[position].getCountry()) :
+                            String.format(LOCALE_WITH_DISTANCE, this.courses[position].getMunicipality(),
+                                    this.courses[position].getState(),this.courses[position].getCountry(),
+                                    MenuOverlayActivity.getDistanceInKm(distanceInM) + "km"));
+
+            convertView.setOnClickListener(view -> {
+                Integer index = (Integer)view.getTag();
+                Course course = this.courses[index];
+                Intent output = new Intent();
+                output.putExtra(INTENT_EXTRA_RESULT, INTENT_RESULT_PLAY_COURSE);
+                output.putExtra(INTENT_EXTRA_COURSE_ID, this.ids[index]);
+                output.putExtra(INTENT_EXTRA_COURSE, new Gson().toJson(course));
+                MenuOverlayActivity.this.setResult(RESULT_OK, output);
+                MenuOverlayActivity.this.finish();
+            });
+
+            return convertView;
+        }
+
+        @Override
+        public long getItemId(int position){
+            return 0;
+        }
+
+        @Override
+        public Course getItem(int position){
+            return this.courses[position];
         }
 
         @Override
         public int getCount() {
             return this.courses.length;
         }
+    }
+    /*
+    private class CourseListAdapter extends RecyclerView.Adapter<CourseListAdapter.CourseViewHolder>{
+        private static final String LOCALE = "%s, %s, %s";
+        private static final String LOCALE_WITH_DISTANCE = "%s, %s, %s - %s";
 
-        @Override
-        public Course getItem(int i) {
-            return this.courses[i];
-        }
+        private final String ids[];
+        private final Course courses[];
 
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
-
-        @Override
-        public View getView(final int i, View convertView, ViewGroup viewGroup) {
-            if(convertView == null){
-                convertView = getLayoutInflater().inflate(R.layout.list_row_course, viewGroup, false);
+        CourseListAdapter(@NonNull Course courses[], boolean showEmptyView, boolean showHeader){
+            this.ids = new String[courses.length];
+            this.courses = courses;
+            for(int i = 0; i < this.ids.length; i++){
+                this.ids[i] = "remote_" + this.courses[i].getRemoteId();
             }
+            this.setViews(showEmptyView, showHeader);
+        }
 
-            convertView.setTag(this.ids[i]);
-            TextView courseName = convertView.findViewById(R.id.courseName);
-            courseName.setText(this.courses[i].getFullName());
+        CourseListAdapter(boolean showEmptyView, boolean showHeader){
+            this(new Course[]{}, showEmptyView, showHeader);
+        }
 
-            Double distanceInM = this.courses[i].getDistance();
-            TextView altTextView = convertView.findViewById(R.id.courseCountry);
+        CourseListAdapter(@NonNull List<JsonRepository.JsonEntity<Course>> courses,
+                          boolean showEmptyView, boolean showHeader){
+            this.courses = courses.stream()
+                    .map(entity -> entity.ref)
+                    .toArray(Course[]::new);
+            this.ids = courses.stream()
+                    .map(entity -> "saved_" + String.valueOf(entity.id))
+                    .toArray(String[]::new);
+            this.setViews(showEmptyView, showHeader);
+        }
 
-            altTextView.setText(
+        private void setViews(boolean showEmptyView, boolean showHeader) {
+            MenuOverlayActivity.this.courseListEmptyView.setVisibility(
+                    (showEmptyView && courses.length == 0) ? View.VISIBLE : View.GONE);
+            MenuOverlayActivity.this.courseListHeader.setVisibility(
+                    showHeader ? View.VISIBLE : View.GONE);
+        }
+
+        class CourseViewHolder extends RecyclerView.ViewHolder {
+            private TextView primaryTextView, altTextView;
+            CourseViewHolder(View view) {
+                super(view);
+                this.primaryTextView = view.findViewById(R.id.courseName);
+                this.altTextView = view.findViewById(R.id.courseCountry);
+            }
+        }
+
+        @NonNull
+        @Override
+        public CourseListAdapter.CourseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                                .inflate(R.layout.list_row_course, parent, false);
+            return new CourseViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull CourseViewHolder holder, int position) {
+            holder.itemView.setTag(position);
+            holder.primaryTextView.setText(this.courses[position].getFullName());
+            Double distanceInM = this.courses[position].getDistance();
+            holder.altTextView.setText(
                 (distanceInM == null) ?
-                    String.format(LOCALE, this.courses[i].getMunicipality(),
-                            this.courses[i].getState(),this.courses[i].getCountry()) :
-                    String.format(LOCALE_WITH_DISTANCE, this.courses[i].getMunicipality(),
-                            this.courses[i].getState(),this.courses[i].getCountry(),
+                    String.format(LOCALE, this.courses[position].getMunicipality(),
+                            this.courses[position].getState(),this.courses[position].getCountry()) :
+                    String.format(LOCALE_WITH_DISTANCE, this.courses[position].getMunicipality(),
+                            this.courses[position].getState(),this.courses[position].getCountry(),
                             MenuOverlayActivity.getDistanceInKm(distanceInM) + "km")
             );
 
-            return convertView;
+            holder.itemView.setOnClickListener(view -> {
+                Integer index = (Integer)view.getTag();
+                Course course = this.courses[index];
+                Intent output = new Intent();
+                output.putExtra(INTENT_EXTRA_RESULT, INTENT_RESULT_PLAY_COURSE);
+                output.putExtra(INTENT_EXTRA_COURSE_ID, this.ids[index]);
+                output.putExtra(INTENT_EXTRA_COURSE, new Gson().toJson(course));
+                MenuOverlayActivity.this.setResult(RESULT_OK, output);
+                MenuOverlayActivity.this.finish();
+            });
+        }
+
+        public int getItemCount() {
+            return this.courses.length;
         }
     }
+    */
 
     //Converts double in Meters to Km to 1 decimal.
     private static double getDistanceInKm(double distanceInM){

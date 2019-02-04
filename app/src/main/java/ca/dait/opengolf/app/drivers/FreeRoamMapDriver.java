@@ -29,7 +29,7 @@ public class FreeRoamMapDriver extends AbstractTrackingMapDriver {
     }
 
     public boolean canRestart(Intent intent){
-        return intent.getIntExtra(MenuOverlayActivity.RESULT, -1) == MenuOverlayActivity.RESULT_FREE_ROAM;
+        return intent.getIntExtra(MenuOverlayActivity.INTENT_EXTRA_RESULT, -1) == MenuOverlayActivity.INTENT_RESULT_FREE_ROAM;
     }
 
     @Override

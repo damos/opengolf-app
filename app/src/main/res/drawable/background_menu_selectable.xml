@@ -4,7 +4,8 @@
         <shape
             xmlns:android="http://schemas.android.com/apk/res/android"
             android:shape="rectangle">
-            <solid android:color="@color/colorPrimaryTint" />
+            <solid android:color="@color/colorMenuWhiteTransparentPressed" />
+            <corners android:radius="@dimen/MenuItemRadius" />
         </shape>
     </item>
     <item android:drawable="@drawable/background_menu_base" />

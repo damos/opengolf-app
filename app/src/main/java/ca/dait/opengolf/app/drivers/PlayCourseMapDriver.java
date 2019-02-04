@@ -7,6 +7,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.gson.Gson;
 
 import java.util.Arrays;
 
@@ -26,10 +27,12 @@ public class PlayCourseMapDriver extends AbstractTrackingMapDriver {
     private int currentHoleNo = 0;
     private Flag[] courseFlags;
 
-    public PlayCourseMapDriver(MainActivity mainActivity, GoogleMap googleMap, Course course, Intent intent){
+    public PlayCourseMapDriver(MainActivity mainActivity, GoogleMap googleMap, Intent intent){
         super(mainActivity, googleMap);
-        this.course = course;
-        this.courseId = intent.getStringExtra(MenuOverlayActivity.COURSE_ID);
+
+        this.courseId = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID);
+        String rawCourse = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE);
+        this.course = new Gson().fromJson(rawCourse, Course.class);
 
         this.showText(Panel.COURSE_TITLE, course.getFullName());
         this.showPreview();
@@ -71,7 +74,8 @@ public class PlayCourseMapDriver extends AbstractTrackingMapDriver {
 
     @Override
     public boolean canRestart(Intent intent) {
-        return this.courseId.equals(intent.getStringExtra(MenuOverlayActivity.COURSE_ID));
+        String newCourseId = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID);
+        return newCourseId != null && newCourseId.equals(this.courseId);
     }
 
     @Override
@@ -137,7 +141,10 @@ public class PlayCourseMapDriver extends AbstractTrackingMapDriver {
 
         this.setHoleNo(newHoleNo + 1);
 
-        if(newHoleNo <= 0){
+        if(newHoleNo == 0 && this.courseFlags.length <= 1){
+            this.hide(Button.NEXT, Button.PREVIOUS);
+        }
+        else if(newHoleNo == 0){
             this.show(Button.NEXT);
             this.hide(Button.PREVIOUS);
         }

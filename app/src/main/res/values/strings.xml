@@ -6,7 +6,7 @@
     <string name="free_roam">Free Roam</string>
     <string name="searchHint">Search (Beta)</string>
     <string name="nicknameHint">Optional: North, Highlands</string>
-    <string name="createCourse">Create New Course Definition</string>
+    <string name="createCourse">Define New Course</string>
     <string name="sample">sample</string>
     <string name="sampleNum">18</string>
 </resources>

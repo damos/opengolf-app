@@ -9,7 +9,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.gson.Gson;
 
 import ca.dait.opengolf.app.R;
 import ca.dait.opengolf.app.drivers.AbstractInteractiveMapDriver;
@@ -18,7 +17,6 @@ import ca.dait.opengolf.app.drivers.FreeRoamMapDriver;
 import ca.dait.opengolf.app.drivers.PlayCourseMapDriver;
 import ca.dait.opengolf.app.drivers.StartupMapDriver;
 import ca.dait.opengolf.app.network.LocationService;
-import ca.dait.opengolf.entities.course.Course;
 
 /**
  * Map activity that contains all interactive user experiences.
@@ -52,26 +50,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if(requestCode == ACTIVITY_RESULT_MENU_OVERLAY){
             if(resultCode == RESULT_OK) {
-                if(this.mapDriver.canRestart(data)){
+                if(this.mapDriver.canRestart(intent)){
                     this.mapDriver.restart();
                 }
                 else {
                     this.mapDriver.clear();
-                    int result = data.getIntExtra(MenuOverlayActivity.RESULT, 0);
+                    int result = intent.getIntExtra(MenuOverlayActivity.INTENT_EXTRA_RESULT, 0);
                     switch (result) {
-                        case MenuOverlayActivity.RESULT_FREE_ROAM:
+                        case MenuOverlayActivity.INTENT_RESULT_FREE_ROAM:
                             this.mapDriver = new FreeRoamMapDriver(this, this.googleMap);
                             break;
-                        case MenuOverlayActivity.RESULT_CREATE_COURSE:
+                        case MenuOverlayActivity.INTENT_RESULT_CREATE_COURSE:
                             this.mapDriver = new CreateCourseMapDriver(this, this.googleMap);
                             break;
-                        case MenuOverlayActivity.RESULT_PLAY_COURSE:
-                            String courseId = data.getStringExtra(MenuOverlayActivity.COURSE_ID);
-                            Course course = new Gson().fromJson(data.getStringExtra(MenuOverlayActivity.COURSE), Course.class);
-                            this.mapDriver = new PlayCourseMapDriver(this, this.googleMap, course, data);
+                        case MenuOverlayActivity.INTENT_RESULT_PLAY_COURSE:
+                            this.mapDriver = new PlayCourseMapDriver(this, this.googleMap, intent);
                             break;
                         default:
                             this.finish();
@@ -83,7 +79,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
         if(requestCode == ACTIVITY_RESULT_MAP_DRIVER){
-            this.mapDriver.onActivityResult(resultCode, data);
+            this.mapDriver.onActivityResult(resultCode, intent);
         }
     }
 
@@ -134,7 +130,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
         Intent intent = new Intent(this, MenuOverlayActivity.class);
         if(this.lastPosition != null){
-            intent.putExtra(MenuOverlayActivity.LOCATION, this.lastPosition);
+            intent.putExtra(MenuOverlayActivity.INTENT_EXTRA_LOCATION, this.lastPosition);
         }
         this.startActivityForResult(intent, ACTIVITY_RESULT_MENU_OVERLAY);
     }
