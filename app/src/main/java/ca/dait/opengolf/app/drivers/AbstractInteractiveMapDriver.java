@@ -77,6 +77,10 @@ public abstract class AbstractInteractiveMapDriver extends AbstractLayoutDriver 
         private final int dragShiftY = AbstractInteractiveMapDriver.this.mainActivity.getResources().getInteger(R.integer.dragShiftY);
         private final MarkerDragAction action;
 
+        VerticalShiftMarkerDragListener(){
+            this.action = marker -> {};
+        }
+
         VerticalShiftMarkerDragListener(MarkerDragAction action){
             this.action = action;
         }

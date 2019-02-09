@@ -66,6 +66,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         case MenuOverlayActivity.INTENT_RESULT_CREATE_COURSE:
                             this.mapDriver = new CreateCourseMapDriver(this, this.googleMap);
                             break;
+                        case MenuOverlayActivity.INTENT_RESULT_EDIT_COURSE:
+                            this.mapDriver = new CreateCourseMapDriver(this, this.googleMap, intent);
+                            break;
                         case MenuOverlayActivity.INTENT_RESULT_PLAY_COURSE:
                             this.mapDriver = new PlayCourseMapDriver(this, this.googleMap, intent);
                             break;

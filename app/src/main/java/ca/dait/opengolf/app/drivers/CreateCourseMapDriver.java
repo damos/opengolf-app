@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,6 @@ import ca.dait.opengolf.entities.course.Course;
  */
 
 public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
-    private boolean canResume = false;
     private String placeId;
     private String facilityName;
 
@@ -49,9 +49,48 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
     private Marker currentFlag;
     private List<Marker> flags = new ArrayList<>();
 
+    private int courseId = -1;
+
     public CreateCourseMapDriver(MainActivity mainActivity, GoogleMap googleMap) {
         super(mainActivity, googleMap);
+        this.startNew();
+    }
 
+    public CreateCourseMapDriver(MainActivity mainActivity, GoogleMap googleMap, Intent intent) {
+        super(mainActivity, googleMap);
+        this.courseId = intent.getIntExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID, -1);
+        String rawCourse = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE);
+        if(this.courseId == -1 || rawCourse == null){
+            this.startNew();
+        }
+        else{
+            Course course = new Gson().fromJson(rawCourse, Course.class);
+            this.placeId = course.getGooglePlaceId();
+            this.facilityName = course.getFacilityName();
+
+            LatLngBounds.Builder boundsBuilder = LatLngBounds.builder();
+            for(Course.Hole hole : course.getHoles()){
+                LatLng latlng = new LatLng(hole.getLat(), hole.getLon());
+                boundsBuilder.include(latlng);
+                this.flags.add(this.createFlag(latlng)) ;
+            }
+            this.setClickListener(Button.START, view -> {
+                this.startCourseDefinition();
+            });
+            this.googleMap.moveCamera(
+                    CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(),
+                            this.mainActivity.getResources().getInteger(R.integer.coursePreviewPadding))
+            );
+            this.googleMap.setOnMapLoadedCallback(() -> {
+                this.googleMap.setOnMapLoadedCallback(null);
+                this.showText(Panel.COURSE_TITLE, course.getFacilityName());
+                this.showText(Panel.NICK_NAME, course.getNickName());
+                this.show(Button.START);
+            });
+        }
+    }
+
+    protected void startNew(){
         try{
             Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
                     .setFilter(new AutocompleteFilter.Builder()
@@ -66,8 +105,7 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
 
     @Override
     public boolean canRestart(Intent intent){
-        return intent.getIntExtra(MenuOverlayActivity.INTENT_EXTRA_RESULT, -1) == MenuOverlayActivity.INTENT_RESULT_CREATE_COURSE
-                && this.canResume;
+        return false;
     }
 
     public void onActivityResult(int resultCode, Intent data) {
@@ -93,13 +131,12 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
             this.setClickListener(Button.START, view -> {
                 this.startCourseDefinition();
                 Toast.makeText(this.mainActivity, "Place the first flag!", Toast.LENGTH_SHORT).show();
-                //TODO: Enable gestures and click listeners
             });
 
             LatLng latLng = place.getLatLng();
             LatLngBounds bounds = place.getViewport();
 
-            this.googleMap.animateCamera(
+            this.googleMap.moveCamera(
                 CameraUpdateFactory.newCameraPosition(
                     CameraPosition.builder()
                         .target(place.getLatLng())
@@ -113,7 +150,6 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
                 this.showText(Panel.COURSE_TITLE, this.facilityName);
                 this.show(Panel.NICK_NAME);
                 this.show(Button.START);
-                this.canResume = true;
             });
         }
         else{
@@ -123,10 +159,23 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
     }
 
     protected void startCourseDefinition(){
-        this.currentHole = 0;
-        if(this.flags.size() > 0){
+        if (this.flags.size() > 0) {
             this.currentFlag = this.flags.get(0);
+            this.currentFlag.setDraggable(true);
         }
+
+        this.setDefaultListeners();
+
+        this.hide(Button.START);
+        this.hide(Panel.COURSE_TITLE, Panel.NICK_NAME);
+        this.setHoleNo(1);
+        this.setMapGestures(true);
+        this.updateButtonPanel();
+        this.positionCamera();
+    }
+
+
+    protected void setDefaultListeners(){
 
         this.googleMap.setOnCameraMoveStartedListener((reason) -> {
             if(reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE && this.currentFlag != null){
@@ -134,7 +183,9 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
             }
         });
 
-        this.setClickListener(Button.DONE, view -> {
+        this.setClickListener(Button.DONE, view ->{
+
+            this.showText(Panel.HOLE_NO, String.valueOf(this.flags.size()));
             LatLngBounds.Builder boundsBuilder = LatLngBounds.builder();
             this.flags.forEach(marker ->{
                 boundsBuilder.include(marker.getPosition());
@@ -157,16 +208,27 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
                 Course course = new Course();
                 course.setGooglePlaceId(this.placeId);
                 course.setHoles(holes.toArray(new Course.Hole[holes.size()]));
-
                 JsonRepository repo = JsonRepository.getInstance(this.mainActivity.getApplicationContext());
-                repo.insert(JsonRepository.TYPE_COURSE, course, ids ->{
-                    this.canResume = false;
-                    this.mainActivity.showMainMenuOverlay();
-                });
+                if(this.courseId == -1) {
+                    //New Course
+                    repo.insert(JsonRepository.TYPE_COURSE, course, ids -> {
+                        this.mainActivity.showMainMenuOverlay();
+                    });
+                }
+                else{
+                    //Editing course
+                    repo.update(this.courseId, JsonRepository.TYPE_COURSE, course, ids -> {
+                        this.mainActivity.showMainMenuOverlay();
+                    });
+                }
             });
 
             this.setClickListener(Button.CANCEL, view2 ->{
-                this.startCourseDefinition();
+                this.showText(Panel.HOLE_NO, String.valueOf(this.currentHole + 1));
+                this.setMapGestures(true);
+                this.updateButtonPanel();
+                this.positionCamera();
+                this.setDefaultListeners();
             });
             this.setMapGestures(false);
             this.show(Panel.NICK_NAME);
@@ -174,19 +236,18 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
             this.showOnly(Button.DONE, Button.CANCEL);
         });
 
-        this.setClickListener(Button.FLAG, view -> {
-            this.positionCamera();
-        });
-
-        this.setClickListener(Button.CANCEL, view -> {
+        this.setClickListener(Button.CANCEL, view ->{
             if(this.currentFlag != null){
                 this.flags.remove(this.currentFlag);
                 this.currentFlag.remove();
                 this.currentFlag = null;
-                this.updateCoordinates();
                 this.updateButtonPanel();
                 this.positionCamera();
             }
+        });
+
+        this.setClickListener(Button.FLAG, view -> {
+            this.positionCamera();
         });
 
         this.setClickListener(Button.NEXT, view -> {
@@ -201,7 +262,6 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
             }
             this.setHoleNo(this.currentHole + 1);
             this.updateButtonPanel();
-            this.updateCoordinates();
             this.positionCamera();
         });
 
@@ -214,39 +274,33 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
             this.currentFlag.setDraggable(true);
             this.setHoleNo(this.currentHole + 1);
             this.updateButtonPanel();
-            this.updateCoordinates();
             this.positionCamera();
         });
 
         this.googleMap.setOnMapClickListener(position -> {
             if(this.currentFlag == null){
-                this.currentFlag = this.googleMap.addMarker(
-                        new MarkerOptions()
-                                .position(position)
-                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_golf_flag))
-                                .anchor(this.anchorFlagIconX, this.anchorFlagIconY));
+                this.currentFlag = this.createFlag(position);
                 this.currentFlag.setDraggable(true);
                 this.flags.add(this.currentHole, this.currentFlag);
                 this.positionCamera(position);
                 Toast.makeText(this.mainActivity, "Click, hold & drag to accurately place.",Toast.LENGTH_SHORT).show();
             }
-            this.updateCoordinates();
             this.updateButtonPanel();
         });
 
-        this.googleMap.setOnMarkerDragListener(new VerticalShiftMarkerDragListener(marker -> {
-            this.updateCoordinates();
-        }));
+        this.googleMap.setOnMarkerDragListener(new VerticalShiftMarkerDragListener());
 
         //Disable marker click.
         this.googleMap.setOnMarkerClickListener(marker -> true);
 
-        this.hide(Button.START);
-        this.hide(Panel.COURSE_TITLE, Panel.NICK_NAME);
-        this.setHoleNo(1);
-        this.setMapGestures(true);
-        this.updateButtonPanel();
-        this.positionCamera();
+    }
+
+    protected Marker createFlag(LatLng position){
+        return this.googleMap.addMarker(
+                new MarkerOptions()
+                        .position(position)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_golf_flag))
+                        .anchor(this.anchorFlagIconX, this.anchorFlagIconY));
     }
 
     protected void setMapGestures(boolean flag){
@@ -278,16 +332,6 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
             this.googleMap.animateCamera(CameraUpdateFactory.zoomTo(17.5f));
         }
         this.hide(Button.FLAG);
-    }
-
-    protected void updateCoordinates(){
-        if(this.currentFlag != null){
-            LatLng position = this.currentFlag.getPosition();
-            this.showText(Panel.COURSE_TITLE, position.latitude + ", " + position.longitude);
-        }
-        else{
-            this.hide(Panel.COURSE_TITLE);
-        }
     }
 
     protected void updateButtonPanel(){

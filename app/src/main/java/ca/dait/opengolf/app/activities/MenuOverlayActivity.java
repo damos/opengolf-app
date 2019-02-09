@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.CycleInterpolator;
@@ -31,6 +30,7 @@ import com.google.gson.Gson;
 import com.google.maps.android.SphericalUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -48,11 +48,13 @@ public class MenuOverlayActivity extends FragmentActivity {
     public final static String INTENT_EXTRA_RESULT = "result";
     public final static String INTENT_EXTRA_COURSE = "course";
     public final static String INTENT_EXTRA_COURSE_ID = "courseId";
+    public final static String INTENT_EXTRA_COURSE_TYPE = "typeId";
     public final static String INTENT_EXTRA_LOCATION = "Location";
 
     public final static int INTENT_RESULT_FREE_ROAM = 1;
     public final static int INTENT_RESULT_CREATE_COURSE = 2;
-    public final static int INTENT_RESULT_PLAY_COURSE = 3;
+    public final static int INTENT_RESULT_EDIT_COURSE = 3;
+    public final static int INTENT_RESULT_PLAY_COURSE = 4;
 
     protected LatLng position;
 
@@ -261,19 +263,21 @@ public class MenuOverlayActivity extends FragmentActivity {
         this.overridePendingTransition(0,0);
     }
 
-    private class CourseListAdapter extends BaseAdapter{
+    private class CourseListAdapter<T> extends BaseAdapter{
         private static final String LOCALE = "%s, %s, %s";
         private static final String LOCALE_WITH_DISTANCE = "%s, %s, %s - %s";
 
+        private final String type;
         private final String ids[];
         private final Course courses[];
+        private boolean longPressEdit = false;
 
         CourseListAdapter(@NonNull Course courses[], boolean showEmptyView, boolean showHeader){
-            this.ids = new String[courses.length];
+            this.type = "remote";
             this.courses = courses;
-            for(int i = 0; i < this.ids.length; i++){
-                this.ids[i] = "remote_" + this.courses[i].getRemoteId();
-            }
+            this.ids = Arrays.stream(courses)
+                    .map(Course::getRemoteId)
+                    .toArray(String[]::new);
             this.setViews(showEmptyView, showHeader);
         }
 
@@ -283,13 +287,15 @@ public class MenuOverlayActivity extends FragmentActivity {
 
         CourseListAdapter(@NonNull List<JsonRepository.JsonEntity<Course>> courses,
                           boolean showEmptyView, boolean showHeader){
+            this.type = "saved";
             this.courses = courses.stream()
                     .map(entity -> entity.ref)
                     .toArray(Course[]::new);
             this.ids = courses.stream()
-                    .map(entity -> "saved_" + String.valueOf(entity.id))
+                    .map(entity -> String.valueOf(entity.id))
                     .toArray(String[]::new);
             this.setViews(showEmptyView, showHeader);
+            this.longPressEdit = true;
         }
 
         private void setViews(boolean showEmptyView, boolean showHeader) {
@@ -324,10 +330,21 @@ public class MenuOverlayActivity extends FragmentActivity {
                 Intent output = new Intent();
                 output.putExtra(INTENT_EXTRA_RESULT, INTENT_RESULT_PLAY_COURSE);
                 output.putExtra(INTENT_EXTRA_COURSE_ID, this.ids[index]);
+                output.putExtra(INTENT_EXTRA_COURSE_TYPE, this.type);
                 output.putExtra(INTENT_EXTRA_COURSE, new Gson().toJson(course));
                 MenuOverlayActivity.this.setResult(RESULT_OK, output);
                 MenuOverlayActivity.this.finish();
             });
+
+            if(this.longPressEdit) {
+                convertView.setOnLongClickListener(view -> {
+                    Integer index = (Integer) view.getTag();
+                    CourseLongPressDialog dialog = new CourseLongPressDialog(MenuOverlayActivity.this,
+                            Integer.valueOf(this.ids[index]), this.courses[index]);
+                    dialog.show();
+                    return true;
+                });
+            }
 
             return convertView;
         }
@@ -347,93 +364,6 @@ public class MenuOverlayActivity extends FragmentActivity {
             return this.courses.length;
         }
     }
-    /*
-    private class CourseListAdapter extends RecyclerView.Adapter<CourseListAdapter.CourseViewHolder>{
-        private static final String LOCALE = "%s, %s, %s";
-        private static final String LOCALE_WITH_DISTANCE = "%s, %s, %s - %s";
-
-        private final String ids[];
-        private final Course courses[];
-
-        CourseListAdapter(@NonNull Course courses[], boolean showEmptyView, boolean showHeader){
-            this.ids = new String[courses.length];
-            this.courses = courses;
-            for(int i = 0; i < this.ids.length; i++){
-                this.ids[i] = "remote_" + this.courses[i].getRemoteId();
-            }
-            this.setViews(showEmptyView, showHeader);
-        }
-
-        CourseListAdapter(boolean showEmptyView, boolean showHeader){
-            this(new Course[]{}, showEmptyView, showHeader);
-        }
-
-        CourseListAdapter(@NonNull List<JsonRepository.JsonEntity<Course>> courses,
-                          boolean showEmptyView, boolean showHeader){
-            this.courses = courses.stream()
-                    .map(entity -> entity.ref)
-                    .toArray(Course[]::new);
-            this.ids = courses.stream()
-                    .map(entity -> "saved_" + String.valueOf(entity.id))
-                    .toArray(String[]::new);
-            this.setViews(showEmptyView, showHeader);
-        }
-
-        private void setViews(boolean showEmptyView, boolean showHeader) {
-            MenuOverlayActivity.this.courseListEmptyView.setVisibility(
-                    (showEmptyView && courses.length == 0) ? View.VISIBLE : View.GONE);
-            MenuOverlayActivity.this.courseListHeader.setVisibility(
-                    showHeader ? View.VISIBLE : View.GONE);
-        }
-
-        class CourseViewHolder extends RecyclerView.ViewHolder {
-            private TextView primaryTextView, altTextView;
-            CourseViewHolder(View view) {
-                super(view);
-                this.primaryTextView = view.findViewById(R.id.courseName);
-                this.altTextView = view.findViewById(R.id.courseCountry);
-            }
-        }
-
-        @NonNull
-        @Override
-        public CourseListAdapter.CourseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                                .inflate(R.layout.list_row_course, parent, false);
-            return new CourseViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull CourseViewHolder holder, int position) {
-            holder.itemView.setTag(position);
-            holder.primaryTextView.setText(this.courses[position].getFullName());
-            Double distanceInM = this.courses[position].getDistance();
-            holder.altTextView.setText(
-                (distanceInM == null) ?
-                    String.format(LOCALE, this.courses[position].getMunicipality(),
-                            this.courses[position].getState(),this.courses[position].getCountry()) :
-                    String.format(LOCALE_WITH_DISTANCE, this.courses[position].getMunicipality(),
-                            this.courses[position].getState(),this.courses[position].getCountry(),
-                            MenuOverlayActivity.getDistanceInKm(distanceInM) + "km")
-            );
-
-            holder.itemView.setOnClickListener(view -> {
-                Integer index = (Integer)view.getTag();
-                Course course = this.courses[index];
-                Intent output = new Intent();
-                output.putExtra(INTENT_EXTRA_RESULT, INTENT_RESULT_PLAY_COURSE);
-                output.putExtra(INTENT_EXTRA_COURSE_ID, this.ids[index]);
-                output.putExtra(INTENT_EXTRA_COURSE, new Gson().toJson(course));
-                MenuOverlayActivity.this.setResult(RESULT_OK, output);
-                MenuOverlayActivity.this.finish();
-            });
-        }
-
-        public int getItemCount() {
-            return this.courses.length;
-        }
-    }
-    */
 
     //Converts double in Meters to Km to 1 decimal.
     private static double getDistanceInKm(double distanceInM){
