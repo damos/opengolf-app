@@ -21,13 +21,13 @@ public class EntityRequest<T> extends JsonRequest<T> {
     private Class<T> resultClass;
 
     public EntityRequest(Class<T> resultClass, int method, String url,
-            Response.Listener<T> listener, @Nullable Response.ErrorListener errorListener){
+                         Response.Listener<T> listener, @Nullable Response.ErrorListener errorListener){
         super(method, url,null, listener, errorListener);
         this.resultClass = resultClass;
     }
 
     public EntityRequest(Class<T> resultClass, int method, String url, Object requestObj,
-                 Response.Listener<T> listener, @Nullable Response.ErrorListener errorListener){
+                         Response.Listener<T> listener, @Nullable Response.ErrorListener errorListener){
         super(method, url, GsonFactory.instance().toJson(requestObj), listener, errorListener);
         this.resultClass = resultClass;
     }

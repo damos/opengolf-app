@@ -49,7 +49,7 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
     private Marker currentFlag;
     private List<Marker> flags = new ArrayList<>();
 
-    private int courseId = -1;
+    private long courseId = -1;
 
     public CreateCourseMapDriver(MainActivity mainActivity, GoogleMap googleMap) {
         super(mainActivity, googleMap);
@@ -58,7 +58,7 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
 
     public CreateCourseMapDriver(MainActivity mainActivity, GoogleMap googleMap, Intent intent) {
         super(mainActivity, googleMap);
-        this.courseId = intent.getIntExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID, -1);
+        this.courseId = intent.getLongExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID, -1);
         String rawCourse = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE);
         if(this.courseId == -1 || rawCourse == null){
             this.startNew();

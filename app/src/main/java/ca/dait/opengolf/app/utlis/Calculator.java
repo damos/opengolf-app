@@ -27,6 +27,10 @@ public class Calculator {
         return Math.round((float)yards / YARDS_FACTOR);
     }
 
+    public static double getDistanceInKm(double distanceInM){
+        return Math.round(distanceInM / 100) / 10d;
+    }
+
     public static float getPixelsFromDp(float dp){
         return dp * Resources.getSystem().getDisplayMetrics().density;
     }

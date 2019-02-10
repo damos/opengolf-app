@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -18,15 +19,80 @@
         android:textSize="@dimen/MenuItemPrimaryTextSize"
         android:text="@string/sample"/>
 
-    <TextView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/courseCountry"
+    <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/MenuItemRadius"
-        android:layout_marginEnd="@dimen/MenuItemRadius"
-        android:textColor="@color/colorTextSecondary"
-        android:textSize="@dimen/MenuItemSecondaryTextSize"
-        android:text="@string/sample"/>
+        android:layout_height="wrap_content">
+
+        <TextView
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/courseAltText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/MenuItemRadius"
+                android:layout_marginEnd="@dimen/MenuItemRadius"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="@dimen/MenuItemSecondaryTextSize"
+                android:text="@string/sample"/>
+
+        <LinearLayout
+            android:id="@+id/buttonPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:id="@+id/spacer1"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+            <ImageView
+                android:id="@+id/editButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/button_floating_edit"
+                android:padding="10dp"/>
+
+            <LinearLayout
+                android:id="@+id/spacer2"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+            <ImageView
+                android:id="@+id/deleteButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/button_floating_garbage"
+                android:padding="10dp"/>
+
+            <LinearLayout
+                android:id="@+id/spacer3"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+            <ImageView
+                android:id="@+id/cancelButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/button_floating_cancel"
+                android:padding="10dp"/>
+
+            <LinearLayout
+                android:id="@+id/spacer4"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+        </LinearLayout>
+
+    </android.support.design.widget.CoordinatorLayout>
 
 </LinearLayout>

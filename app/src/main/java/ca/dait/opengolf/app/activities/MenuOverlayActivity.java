@@ -12,6 +12,7 @@ import android.view.animation.CycleInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -35,10 +36,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import ca.dait.opengolf.app.R;
 import ca.dait.opengolf.app.network.EntityRequest;
 import ca.dait.opengolf.app.network.RequestQueueManager;
+import ca.dait.opengolf.app.utlis.Calculator;
 import ca.dait.opengolf.app.utlis.JsonRepository;
 import ca.dait.opengolf.entities.course.Course;
 import ca.dait.opengolf.entities.course.CourseSearchResult;
@@ -48,7 +51,7 @@ public class MenuOverlayActivity extends FragmentActivity {
     public final static String INTENT_EXTRA_RESULT = "result";
     public final static String INTENT_EXTRA_COURSE = "course";
     public final static String INTENT_EXTRA_COURSE_ID = "courseId";
-    public final static String INTENT_EXTRA_COURSE_TYPE = "typeId";
+    public final static String INTENT_EXTRA_COURSE_REMOTE_ID = "remoteCourseId";
     public final static String INTENT_EXTRA_LOCATION = "Location";
 
     public final static int INTENT_RESULT_FREE_ROAM = 1;
@@ -208,10 +211,9 @@ public class MenuOverlayActivity extends FragmentActivity {
                         else{
                             finalCourses.sort(Comparator.comparing((entity) -> entity.ref.getDistance()));
                         }
+
+                        this.setSavedCourseAdapter(finalCourses);
                         this.refreshLayout.setRefreshing(false);
-                        this.courseListView.setAdapter(new CourseListAdapter(
-                                finalCourses,false, true
-                        ));
                     });
         });
     }
@@ -244,8 +246,7 @@ public class MenuOverlayActivity extends FragmentActivity {
         EntityRequest<CourseSearchResult> request =
             new EntityRequest<>(CourseSearchResult.class, Request.Method.GET, url,
                 response ->{
-                    this.courseListView.setAdapter(
-                            new CourseListAdapter(response.getResults(), true, false));
+                    this.setRemoteCourseAdapter(response.getResults());
                     this.refreshLayout.setRefreshing(false);
                 },
                 error ->{
@@ -263,110 +264,166 @@ public class MenuOverlayActivity extends FragmentActivity {
         this.overridePendingTransition(0,0);
     }
 
-    private class CourseListAdapter<T> extends BaseAdapter{
+    protected void setSavedCourseAdapter(List<JsonRepository.JsonEntity<Course>> entities){
+        CourseListAdapter<JsonRepository.JsonEntity<Course>> adapter =
+                new CourseListAdapter<>(entities, false, true,
+                        entity -> entity.ref, entity -> entity.id);
+        this.courseListView.setAdapter(adapter);
+        this.courseListView.setOnItemClickListener(adapter::onItemClick);
+        this.courseListView.setOnItemLongClickListener(adapter::onItemLongClick);
+    }
+
+    protected void setRemoteCourseAdapter(Course courses[]){
+        CourseListAdapter<Course> adapter = new CourseListAdapter<>(courses,
+                true, false, course -> course, course -> -1l);
+        this.courseListView.setAdapter(adapter);
+        this.courseListView.setOnItemClickListener(adapter::onItemClick);
+        this.courseListView.setOnItemLongClickListener(null);
+    }
+
+    private class CourseListAdapter<T> extends BaseAdapter {
         private static final String LOCALE = "%s, %s, %s";
         private static final String LOCALE_WITH_DISTANCE = "%s, %s, %s - %s";
 
-        private final String type;
-        private final String ids[];
-        private final Course courses[];
-        private boolean longPressEdit = false;
+        private final List<T> items;
+        private final Function<T, Course> courseExtractor;
+        private final Function<T, Long> idExtractor;
 
-        CourseListAdapter(@NonNull Course courses[], boolean showEmptyView, boolean showHeader){
-            this.type = "remote";
-            this.courses = courses;
-            this.ids = Arrays.stream(courses)
-                    .map(Course::getRemoteId)
-                    .toArray(String[]::new);
-            this.setViews(showEmptyView, showHeader);
-        }
-
-        CourseListAdapter(boolean showEmptyView, boolean showHeader){
-            this(new Course[]{}, showEmptyView, showHeader);
-        }
-
-        CourseListAdapter(@NonNull List<JsonRepository.JsonEntity<Course>> courses,
-                          boolean showEmptyView, boolean showHeader){
-            this.type = "saved";
-            this.courses = courses.stream()
-                    .map(entity -> entity.ref)
-                    .toArray(Course[]::new);
-            this.ids = courses.stream()
-                    .map(entity -> String.valueOf(entity.id))
-                    .toArray(String[]::new);
-            this.setViews(showEmptyView, showHeader);
-            this.longPressEdit = true;
-        }
-
-        private void setViews(boolean showEmptyView, boolean showHeader) {
+        CourseListAdapter(List<T> items, boolean showEmptyView, boolean showHeader,
+                          Function<T, Course> courseExtractor, Function<T, Long> idExtractor) {
+            this.items = items;
+            this.courseExtractor = courseExtractor;
+            this.idExtractor = idExtractor;
             MenuOverlayActivity.this.courseListEmptyView.setVisibility(
-                    (showEmptyView && courses.length == 0) ? View.VISIBLE : View.GONE);
+                    (showEmptyView && this.items.size() == 0) ? View.VISIBLE : View.GONE);
             MenuOverlayActivity.this.courseListHeader.setVisibility(
                     showHeader ? View.VISIBLE : View.GONE);
         }
+
+        CourseListAdapter(@NonNull T items[], boolean showEmptyView, boolean showHeader,
+                          @NonNull Function<T, Course> courseExtractor, @NonNull Function<T, Long> idExtractor) {
+            this(Arrays.asList(items), showEmptyView, showHeader, courseExtractor, idExtractor);
+        }
+
+        CourseListAdapter(boolean showEmptyView, boolean showHeader) {
+            this(new ArrayList<>(), showEmptyView, showHeader, null, null);
+        }
+
+        private class ViewHolder{
+            private final int position;
+            private final View buttonPanel, cancelButton, deleteButton, editButton;
+            private final TextView primaryTextView,altTextView;
+            ViewHolder(int position, View view){
+                this.position = position;
+                this.primaryTextView = view.findViewById(R.id.courseName);
+                this.altTextView = view.findViewById(R.id.courseAltText);
+                this.buttonPanel = view.findViewById(R.id.buttonPanel);
+                this.cancelButton = view.findViewById(R.id.cancelButton);
+                this.deleteButton = view.findViewById(R.id.deleteButton);
+                this.editButton = view.findViewById(R.id.editButton);
+
+                view.setTag(this);
+                this.cancelButton.setTag(this);
+                this.deleteButton.setTag(this);
+                this.editButton.setTag(this);
+            }
+        }
+
+        protected void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Course course = this.getCourse(position);
+            Intent output = new Intent();
+            output.putExtra(INTENT_EXTRA_RESULT, INTENT_RESULT_PLAY_COURSE);
+            output.putExtra(INTENT_EXTRA_COURSE_ID, this.getItemId(position));
+            output.putExtra(INTENT_EXTRA_COURSE_REMOTE_ID, course.getRemoteId());
+            output.putExtra(INTENT_EXTRA_COURSE, new Gson().toJson(course));
+            MenuOverlayActivity.this.setResult(RESULT_OK, output);
+            MenuOverlayActivity.this.finish();
+        }
+
+        public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+            @SuppressWarnings("unchecked")
+            ViewHolder holder = (ViewHolder)view.getTag();
+            if(holder.buttonPanel.getVisibility() == View.VISIBLE){
+                return false;
+            }
+            else{
+                holder.buttonPanel.setVisibility(View.VISIBLE);
+                holder.altTextView.setVisibility(View.GONE);
+
+                holder.cancelButton.setOnClickListener(v -> {
+                    @SuppressWarnings("unchecked")
+                    ViewHolder parentHolder = (ViewHolder)view.getTag();
+                    parentHolder.buttonPanel.setVisibility(View.GONE);
+                    parentHolder.altTextView.setVisibility(View.VISIBLE);
+                });
+                holder.editButton.setOnClickListener(v -> {
+                    @SuppressWarnings("unchecked")
+                    ViewHolder parentHolder = (ViewHolder)view.getTag();
+
+                    Intent output = new Intent();
+                    output.putExtra(MenuOverlayActivity.INTENT_EXTRA_RESULT, MenuOverlayActivity.INTENT_RESULT_EDIT_COURSE);
+                    output.putExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID, this.getItemId(parentHolder.position));
+                    output.putExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE, new Gson().toJson(this.getCourse(parentHolder.position)));
+                    MenuOverlayActivity.this.setResult(MenuOverlayActivity.RESULT_OK, output);
+                    MenuOverlayActivity.this.finish();
+                });
+                holder.deleteButton.setOnClickListener(v ->{
+                    @SuppressWarnings("unchecked")
+                    ViewHolder parentHolder = (ViewHolder)view.getTag();
+
+                    MenuOverlayActivity.this.repo.delete(
+                        this.getItemId(parentHolder.position),
+                        i -> {
+                            this.items.remove(parentHolder.position);
+                            this.notifyDataSetChanged();
+                        }
+                    );
+                });
+            }
+            return true;
+        }
+
 
         @Override
         public View getView(final int position, View convertView, ViewGroup viewGroup) {
             if (convertView == null) {
                 convertView = getLayoutInflater().inflate(R.layout.list_row_course, viewGroup, false);
             }
-            convertView.setTag(position);
-            TextView primaryTextView = convertView.findViewById(R.id.courseName);
-            TextView altTextView = convertView.findViewById(R.id.courseCountry);
+            ViewHolder holder = new ViewHolder(position, convertView);
 
-            primaryTextView.setText(this.courses[position].getFullName());
-            Double distanceInM = this.courses[position].getDistance();
-            altTextView.setText(
+            Course course = this.getCourse(position);
+            holder.primaryTextView.setText(course.getFullName());
+            Double distanceInM = course.getDistance();
+            holder.altTextView.setText(
                     (distanceInM == null) ?
-                            String.format(LOCALE, this.courses[position].getMunicipality(),
-                                    this.courses[position].getState(),this.courses[position].getCountry()) :
-                            String.format(LOCALE_WITH_DISTANCE, this.courses[position].getMunicipality(),
-                                    this.courses[position].getState(),this.courses[position].getCountry(),
-                                    MenuOverlayActivity.getDistanceInKm(distanceInM) + "km"));
-
-            convertView.setOnClickListener(view -> {
-                Integer index = (Integer)view.getTag();
-                Course course = this.courses[index];
-                Intent output = new Intent();
-                output.putExtra(INTENT_EXTRA_RESULT, INTENT_RESULT_PLAY_COURSE);
-                output.putExtra(INTENT_EXTRA_COURSE_ID, this.ids[index]);
-                output.putExtra(INTENT_EXTRA_COURSE_TYPE, this.type);
-                output.putExtra(INTENT_EXTRA_COURSE, new Gson().toJson(course));
-                MenuOverlayActivity.this.setResult(RESULT_OK, output);
-                MenuOverlayActivity.this.finish();
-            });
-
-            if(this.longPressEdit) {
-                convertView.setOnLongClickListener(view -> {
-                    Integer index = (Integer) view.getTag();
-                    CourseLongPressDialog dialog = new CourseLongPressDialog(MenuOverlayActivity.this,
-                            Integer.valueOf(this.ids[index]), this.courses[index]);
-                    dialog.show();
-                    return true;
-                });
-            }
+                            String.format(LOCALE, course.getMunicipality(),
+                                    course.getState(), course.getCountry()) :
+                            String.format(LOCALE_WITH_DISTANCE, course.getMunicipality(),
+                                    course.getState(), course.getCountry(),
+                                    Calculator.getDistanceInKm(distanceInM) + "km"));
 
             return convertView;
         }
 
         @Override
-        public long getItemId(int position){
-            return 0;
+        public long getItemId(int position) {
+            return this.idExtractor.apply(this.items.get(position));
         }
 
         @Override
-        public Course getItem(int position){
-            return this.courses[position];
+        public T getItem(int position) {
+            return this.items.get(position);
+        }
+
+        protected Course getCourse(int position) {
+            return this.courseExtractor.apply(this.getItem(position));
         }
 
         @Override
         public int getCount() {
-            return this.courses.length;
+            return this.items.size();
         }
     }
 
-    //Converts double in Meters to Km to 1 decimal.
-    private static double getDistanceInKm(double distanceInM){
-        return Math.round(distanceInM / 100) / 10d;
-    }
+
 }

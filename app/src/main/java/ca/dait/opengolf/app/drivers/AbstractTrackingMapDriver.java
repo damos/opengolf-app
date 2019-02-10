@@ -123,8 +123,7 @@ public abstract class AbstractTrackingMapDriver extends AbstractInteractiveMapDr
             Location newLocation = locationResult.getLastLocation();
             AbstractTrackingMapDriver.this.currentLocation = newLocation;
             AbstractTrackingMapDriver.this.currentPosition = new LatLng(
-                    newLocation.getLatitude(),
-                    newLocation.getLongitude());
+                    newLocation.getLatitude(), newLocation.getLongitude());
             AbstractTrackingMapDriver.this.mainActivity.setLastPosition(AbstractTrackingMapDriver.this.currentPosition);
 
             AbstractTrackingMapDriver.this.updatePanel();

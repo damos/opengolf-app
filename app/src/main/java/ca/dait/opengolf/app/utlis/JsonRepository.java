@@ -53,8 +53,8 @@ public class JsonRepository{
         new FetchAsyncTask<T, Integer, List<JsonEntity<T>>>(clazz, this.dao::getAll, resultHandler).execute(type);
     }
 
-    public <T> void get(Class<T> clazz, final Integer id, Consumer<JsonEntity<T>> resultHandler){
-        new FetchAsyncTask<T, Integer, JsonEntity<T>>(clazz, this.dao::get, resultHandler).execute(id);
+    public <T> void get(Class<T> clazz, final Long id, Consumer<JsonEntity<T>> resultHandler){
+        new FetchAsyncTask<T, Long, JsonEntity<T>>(clazz, this.dao::get, resultHandler).execute(id);
     }
 
     public <T> void insert(Integer type, T object){
@@ -67,22 +67,22 @@ public class JsonRepository{
         new UpdateAsyncTask<RawEntity, long[]>(this.dao::insert, handler).execute(rawEntity);
     }
 
-    public <T> void update(Integer id, Integer type, T object){
+    public <T> void update(Long id, Integer type, T object){
         RawEntity rawEntity = new RawEntity(id, type, object);
         new UpdateAsyncTask<RawEntity, Integer>(this.dao::update).execute(rawEntity);
     }
 
-    public <T> void update(Integer id, Integer type, T object, Consumer<Integer> handler){
+    public <T> void update(Long id, Integer type, T object, Consumer<Integer> handler){
         RawEntity rawEntity = new RawEntity(id, type, object);
         new UpdateAsyncTask<RawEntity, Integer>(this.dao::update, handler).execute(rawEntity);
     }
 
-    public void delete(Integer id){
-        new UpdateAsyncTask<Integer, Integer>(this.dao::delete).execute(id);
+    public void delete(Long id){
+        new UpdateAsyncTask<Long, Integer>(this.dao::delete).execute(id);
     }
 
-    public void delete(Integer id, Consumer<Integer> resultHandler){
-        new UpdateAsyncTask<Integer, Integer>(this.dao::delete, resultHandler).execute(id);
+    public void delete(Long id, Consumer<Integer> resultHandler){
+        new UpdateAsyncTask<Long, Integer>(this.dao::delete, resultHandler).execute(id);
     }
 
     /**
@@ -159,7 +159,7 @@ public class JsonRepository{
     public interface EntityDao {
 
         @Query("SELECT * FROM RawEntity WHERE id = :id")
-        RawEntity get(Integer id);
+        RawEntity get(Long id);
 
         @Query("SELECT * FROM RawEntity WHERE type = :type")
         List<RawEntity> getAll(Integer type);
@@ -171,13 +171,13 @@ public class JsonRepository{
         int update(RawEntity... entity);
 
         @Query("DELETE from RawEntity where id =:id")
-        int delete(Integer... id);
+        int delete(Long... id);
 
         default <T> T doSomething(T obj){
             return null;
         }
 
-        default <T> JsonEntity<T> get(Class<T> clazz, Integer... id){
+        default <T> JsonEntity<T> get(Class<T> clazz, Long... id){
             RawEntity rawEntity = this.get(id[0]);
             if(rawEntity != null){
                 return new JsonEntity<T>(clazz, rawEntity);
@@ -200,7 +200,7 @@ public class JsonRepository{
      */
     @Entity
     public static class RawEntity{
-        @PrimaryKey(autoGenerate = true) private int id;
+        @PrimaryKey(autoGenerate = true) private long id;
         @ColumnInfo(name = "type") private int type;
         @NonNull @ColumnInfo(name = "json") private String json = "";
 
@@ -209,13 +209,13 @@ public class JsonRepository{
             this.type = type;
             this.json = GSON.toJson(object);
         }
-        RawEntity(Integer id, Integer type, Object object){
+        RawEntity(Long id, Integer type, Object object){
             this.id = id;
             this.type = type;
             this.json = GSON.toJson(object);
         }
 
-        void setId(int id){
+        void setId(long id){
             this.id = id;
         }
 
@@ -227,7 +227,7 @@ public class JsonRepository{
             this.json = json;
         }
 
-        int getId(){
+        long getId(){
             return this.id;
         }
 
@@ -246,7 +246,7 @@ public class JsonRepository{
      * @param <T>
      */
     public static class JsonEntity<T>{
-        public final int id;
+        public final long id;
         public final int type;
         public final T ref;
 

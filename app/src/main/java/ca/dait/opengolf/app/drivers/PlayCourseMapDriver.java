@@ -22,7 +22,8 @@ import ca.dait.opengolf.entities.course.Course;
 
 public class PlayCourseMapDriver extends AbstractTrackingMapDriver {
 
-    private final String courseId;
+    private final long courseId;
+    private final String remoteCourseId;
     private final Course course;
     private int currentHoleNo = 0;
     private Flag[] courseFlags;
@@ -30,7 +31,8 @@ public class PlayCourseMapDriver extends AbstractTrackingMapDriver {
     public PlayCourseMapDriver(MainActivity mainActivity, GoogleMap googleMap, Intent intent){
         super(mainActivity, googleMap);
 
-        this.courseId = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID);
+        this.courseId = intent.getLongExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID, -1);
+        this.remoteCourseId = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_REMOTE_ID);
         String rawCourse = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE);
         this.course = new Gson().fromJson(rawCourse, Course.class);
 
@@ -74,8 +76,12 @@ public class PlayCourseMapDriver extends AbstractTrackingMapDriver {
 
     @Override
     public boolean canRestart(Intent intent) {
-        String newCourseId = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID);
-        return newCourseId != null && newCourseId.equals(this.courseId);
+        long courseId = intent.getLongExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_ID, -1);
+        String remoteId = intent.getStringExtra(MenuOverlayActivity.INTENT_EXTRA_COURSE_REMOTE_ID);
+
+        return (intent.getIntExtra(MenuOverlayActivity.INTENT_EXTRA_RESULT, -1) == MenuOverlayActivity.INTENT_RESULT_PLAY_COURSE) &&
+                ((courseId == -1 && remoteId != null && remoteId.equals(this.remoteCourseId)) ||
+                (courseId != -1 && courseId == this.courseId));
     }
 
     @Override
