@@ -36,21 +36,41 @@ public class Calculator {
     }
 
     /**
-     * This method needs to be tuned with a high precision math library.
+     * TODO: This method should be tuned for better precision but seems to work great for now.
      *
-     * This algorithm is based on the fact that at zoom level 0, google maps uses 256dp to map the
-     * entire circumference of the earth 40075000m.
+     * This algorithm is based on the fact that at zoom level 0, google maps uses 256dp
+     * (density independent pixels) to map the entire circumference of the earth 40075000m. For each
+     * additional whole number zoom level, the # of dp's doubles.
      *
-     * Formula:  256 * 2 ^ N = 256dp OR..... 256 x 2 ^ N = 40075000m/256dp
+     *  256 * 2 ^ N = # of dp for earth's circumference
      *
-     * Therefore, give a distance X, and a screen height Y, we can solve for N
-     *      256 X 2 ^ N = X/Y
+     *  Therefore:
      *
-     * This method does:
+     *  40075000m / (256 * 2 ^ N) = # of meters per single dp
+     *
+     *  Therefore, if we know the screen height in dp:
+     *
+     *  screenHeight * (40075000m / (256 * 2 ^ N)) = # of meters represented in the screen height.
+     *
+     *  Therefore if we also know the screen height we want to fit into the screen we can solve
+     *  for N.
+     *
+     *  Finally, given screen height X (dp) and distance Y (m), solve for N:
+     *
+     *  -> X * (40075000m / (256 * 2 ^ N)) = Y
+     *  -> 40075000m / (256 * 2 ^ N) = Y/X
+     *  (cross multiply)
+     *  -> Y * (256 * 2 ^ N) = X * 40075000m
+     *  -> 256 * 2 ^ N = (X * 40075000m) / Y
+     *  -> 2 ^ N = ((X * 40075000m) / Y) / 256
+     *
+     *  -> N = log2((X * 40075000m) / Y) / 256)
+     *
+     * Therefore this method does:
      *
      * log2(((pixels-dp * earth-circumference) / distance-meters) / 256)
      *
-     * Because there is no log2() method, we use natural log: log(var)/log(2)
+     * Because there is no log2() method, we use natural log: log(target)/log(2)
      *
      * @param pixels
      * @param distance
@@ -60,8 +80,8 @@ public class Calculator {
         //Must convert pixels to density-independent pixels (dp)
         long dp = Math.round(pixels / Resources.getSystem().getDisplayMetrics().density);
 
-        long zx = dp * (long)EARTH_CIRCUMFERENCE;
-        float zxy = zx / ((float)distance * HOLE_BUFFER); // send a buffer to the distance so the center of the green isn't on the edge of screen
+        long zx = dp * EARTH_CIRCUMFERENCE;
+        float zxy = zx / ((float)distance * HOLE_BUFFER); // send a buffer to add some padding
         float toLog = zxy / (float)EARTH_BASE_PIXELS;
         double zoom = Math.log(toLog) / Math.log(2);
         return (float)zoom;
