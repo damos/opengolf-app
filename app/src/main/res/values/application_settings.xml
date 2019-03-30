@@ -21,6 +21,8 @@
     <string name="url_searchTermWithLoc">https://opengolf.darinamos.ca/api/course/search?searchTerm=%s&amp;lat=%f&amp;lon=%f</string>
     <string name="url_getCourse">https://opengolf.darinamos.ca/api/course/%s</string>
 
+    <string name="url_courses">https://darinamos.ca/json/courses.json</string>
+
     <string name="courseId">courseId</string>
 
     <integer name="strokeYardageDp">4</integer>

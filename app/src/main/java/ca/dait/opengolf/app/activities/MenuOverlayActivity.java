@@ -2,6 +2,7 @@ package ca.dait.opengolf.app.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
@@ -28,10 +29,13 @@ import com.google.android.gms.location.places.PlaceBufferResponse;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.SphericalUtil;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -95,7 +99,8 @@ public class MenuOverlayActivity extends FragmentActivity {
         this.searchBox.setOnEditorActionListener((view, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH){
                 if(this.searchBox.getText().toString().trim().length() > 0){
-                    this.showSearchResults();
+                    //TODO: Removed AWS back-end & Search
+                    //this.showSearchResults();
                     return false;
                 }
                 else{
@@ -137,7 +142,9 @@ public class MenuOverlayActivity extends FragmentActivity {
                     this.showNearMe();
                     break;
                 default:
-                    this.showSearchResults();
+                    //TODO: Removed Search & AWS backend
+                    //this.showSearchResults();
+                    this.showNearMe();
             }
         });
 
@@ -218,6 +225,8 @@ public class MenuOverlayActivity extends FragmentActivity {
         });
     }
 
+    /*
+    Remove AWS BackEnd. Free Tier expired
     protected void showSearchResults(){
         this.radioGroup.clearCheck();
         if(this.searchBox.hasFocus()){
@@ -254,6 +263,43 @@ public class MenuOverlayActivity extends FragmentActivity {
                     Toast.makeText(this, "Unable to find nearby courses.", Toast.LENGTH_SHORT).show();
                 }
             );
+
+        this.requestQueue.add(request);
+    }
+    */
+
+    protected void showNearMe(){
+        this.refreshLayout.setRefreshing(true);
+
+        EntityRequest<CourseSearchResult> request =
+                new EntityRequest<>(CourseSearchResult.class, Request.Method.GET, this.getString(R.string.url_courses),
+                        response ->{
+                            Course courses[] = response.getResults();
+
+                            if(this.position != null && courses != null){
+                                Location courseLoc = new Location("CourseLoc");
+                                Location userLoc = new Location("userLoc");
+                                userLoc.setLongitude(this.position.longitude);
+                                userLoc.setLatitude(this.position.latitude);
+
+                                courses = Arrays.stream(courses)
+                                        .map(course ->{
+                                            courseLoc.setLatitude(course.getHoles()[0].getLat());
+                                            courseLoc.setLongitude(course.getHoles()[0].getLon());
+                                            course.setDistance((double)userLoc.distanceTo(courseLoc));
+                                            return course;
+                                        })
+                                        .sorted(Comparator.comparing(Course::getDistance))
+                                        .toArray(Course[]::new);
+                            }
+                            this.setRemoteCourseAdapter(courses);
+                            this.refreshLayout.setRefreshing(false);
+                        },
+                        error ->{
+                            this.refreshLayout.setRefreshing(false);
+                            Toast.makeText(this, "Unable to find nearby courses.", Toast.LENGTH_SHORT).show();
+                        }
+                );
 
         this.requestQueue.add(request);
     }
