@@ -23,23 +23,13 @@ import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.PlaceBufferResponse;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.google.maps.android.SphericalUtil;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import ca.dait.opengolf.app.R;
@@ -174,54 +164,19 @@ public class MenuOverlayActivity extends FragmentActivity {
 
         this.courseListEmptyView.setVisibility(View.GONE);
 
-        this.repo.getAll(Course.class, JsonRepository.TYPE_COURSE, results ->{
+        this.repo.getAll(Course.class, JsonRepository.TYPE_COURSE, savedCourses ->{
 
-            if(results.size() == 0){
-                this.refreshLayout.setRefreshing(false);
-                this.courseListView.setAdapter(new CourseListAdapter(false, true));
-                return;
-            }
+            Course courses[] = savedCourses.stream()
+                        .map(entity -> {
+                            Course course = entity.ref;
+                            course.setId(entity.id);
+                            return course;
+                        })
+                        .toArray(Course[]::new);
 
-            //A single google place ID could have multiple golf courses.
-            //Build on-to-many map of placeId to courses.
-            Map<String, List<JsonRepository.JsonEntity<Course>>> placeIdToCourses = new HashMap<>();
-            results.forEach(entity ->{
-                placeIdToCourses.computeIfAbsent(entity.ref.getGooglePlaceId(),
-                        (key) -> new ArrayList<>()).add(entity);
-            });
+            this.setSavedCourseAdapter(this.sortCourses(courses));
+            this.refreshLayout.setRefreshing(false);
 
-            //Fetch Place data.
-            //TODO: Leverage caching.
-            GeoDataClient client = Places.getGeoDataClient(this);
-            client.getPlaceById(placeIdToCourses.keySet().toArray(new String[placeIdToCourses.size()]))
-                    .addOnCompleteListener(task ->{
-                        PlaceBufferResponse response = task.getResult();
-                        response.forEach((Place place) -> {
-                            Double distance = (this.position == null) ? null :
-                                    SphericalUtil.computeDistanceBetween(this.position, place.getLatLng());
-                            String address[] = place.getAddress().toString().split(",");
-                            List<JsonRepository.JsonEntity<Course>> entities = placeIdToCourses.get(place.getId());
-                            entities.forEach(entity -> {
-                                entity.ref.setMunicipality(address[1]);
-                                entity.ref.setCountry(address[3]);
-                                entity.ref.setFacilityName(place.getName().toString());
-                                entity.ref.setState(address[2].substring(1,3));
-                                entity.ref.setDistance(distance);
-                            });
-                        });
-
-                        List<JsonRepository.JsonEntity<Course>> finalCourses = new ArrayList<>();
-                        placeIdToCourses.values().forEach(finalCourses::addAll);
-                        if(this.position == null){
-                            finalCourses.sort(Comparator.comparing((entity) -> entity.ref.getFacilityName()));
-                        }
-                        else{
-                            finalCourses.sort(Comparator.comparing((entity) -> entity.ref.getDistance()));
-                        }
-
-                        this.setSavedCourseAdapter(finalCourses);
-                        this.refreshLayout.setRefreshing(false);
-                    });
         });
     }
 
@@ -274,24 +229,7 @@ public class MenuOverlayActivity extends FragmentActivity {
         EntityRequest<CourseSearchResult> request =
                 new EntityRequest<>(CourseSearchResult.class, Request.Method.GET, this.getString(R.string.url_courses),
                         response ->{
-                            Course courses[] = response.getResults();
-
-                            if(this.position != null && courses != null){
-                                Location courseLoc = new Location("CourseLoc");
-                                Location userLoc = new Location("userLoc");
-                                userLoc.setLongitude(this.position.longitude);
-                                userLoc.setLatitude(this.position.latitude);
-
-                                courses = Arrays.stream(courses)
-                                        .map(course ->{
-                                            courseLoc.setLatitude(course.getHoles()[0].getLat());
-                                            courseLoc.setLongitude(course.getHoles()[0].getLon());
-                                            course.setDistance((double)userLoc.distanceTo(courseLoc));
-                                            return course;
-                                        })
-                                        .sorted(Comparator.comparing(Course::getDistance))
-                                        .toArray(Course[]::new);
-                            }
+                            Course courses[] = this.sortCourses(response.getResults());
                             this.setRemoteCourseAdapter(courses);
                             this.refreshLayout.setRefreshing(false);
                         },
@@ -304,16 +242,45 @@ public class MenuOverlayActivity extends FragmentActivity {
         this.requestQueue.add(request);
     }
 
+    protected Course[] sortCourses(Course courses[]){
+        if(courses == null || courses.length == 0) return courses;
+
+        //Either sort by distance or name
+        if(this.position != null){
+
+            Location courseLoc = new Location("CourseLoc");
+            Location userLoc = new Location("userLoc");
+            userLoc.setLongitude(this.position.longitude);
+            userLoc.setLatitude(this.position.latitude);
+
+            courses = Arrays.stream(courses)
+                    .map(course ->{
+                        courseLoc.setLatitude(course.getHoles()[0].getLat());
+                        courseLoc.setLongitude(course.getHoles()[0].getLon());
+                        course.setDistance((double)userLoc.distanceTo(courseLoc));
+                        return course;
+                    })
+                    .sorted(Comparator.comparing(Course::getDistance))
+                    .toArray(Course[]::new);
+        }
+        else{
+            return Arrays.stream(courses)
+                    .sorted(Comparator.comparing((course) -> course.getDistance()))
+                    .toArray(Course[]::new);
+        }
+        return courses;
+    }
+
     @Override
     public void onBackPressed(){
         super.onBackPressed();
         this.overridePendingTransition(0,0);
     }
 
-    protected void setSavedCourseAdapter(List<JsonRepository.JsonEntity<Course>> entities){
-        CourseListAdapter<JsonRepository.JsonEntity<Course>> adapter =
-                new CourseListAdapter<>(entities, false, true,
-                        entity -> entity.ref, entity -> entity.id);
+    protected void setSavedCourseAdapter(Course courses[]){
+        CourseListAdapter<Course> adapter = new CourseListAdapter<>(courses,
+                courses == null || courses.length == 0,
+                true, course -> course, Course::getId);
         this.courseListView.setAdapter(adapter);
         this.courseListView.setOnItemClickListener(adapter::onItemClick);
         this.courseListView.setOnItemLongClickListener(adapter::onItemLongClick);
@@ -321,7 +288,7 @@ public class MenuOverlayActivity extends FragmentActivity {
 
     protected void setRemoteCourseAdapter(Course courses[]){
         CourseListAdapter<Course> adapter = new CourseListAdapter<>(courses,
-                true, false, course -> course, course -> -1l);
+                courses == null || courses.length == 0, false, course -> course, course -> -1l);
         this.courseListView.setAdapter(adapter);
         this.courseListView.setOnItemClickListener(adapter::onItemClick);
         this.courseListView.setOnItemLongClickListener(null);
@@ -335,24 +302,15 @@ public class MenuOverlayActivity extends FragmentActivity {
         private final Function<T, Course> courseExtractor;
         private final Function<T, Long> idExtractor;
 
-        CourseListAdapter(List<T> items, boolean showEmptyView, boolean showHeader,
+        CourseListAdapter(@NonNull T items[], boolean showEmptyView, boolean showHeader,
                           Function<T, Course> courseExtractor, Function<T, Long> idExtractor) {
-            this.items = items;
+            this.items = new ArrayList<>(Arrays.asList(items));
             this.courseExtractor = courseExtractor;
             this.idExtractor = idExtractor;
             MenuOverlayActivity.this.courseListEmptyView.setVisibility(
                     (showEmptyView && this.items.size() == 0) ? View.VISIBLE : View.GONE);
             MenuOverlayActivity.this.courseListHeader.setVisibility(
                     showHeader ? View.VISIBLE : View.GONE);
-        }
-
-        CourseListAdapter(@NonNull T items[], boolean showEmptyView, boolean showHeader,
-                          @NonNull Function<T, Course> courseExtractor, @NonNull Function<T, Long> idExtractor) {
-            this(Arrays.asList(items), showEmptyView, showHeader, courseExtractor, idExtractor);
-        }
-
-        CourseListAdapter(boolean showEmptyView, boolean showHeader) {
-            this(new ArrayList<>(), showEmptyView, showHeader, null, null);
         }
 
         private class ViewHolder{

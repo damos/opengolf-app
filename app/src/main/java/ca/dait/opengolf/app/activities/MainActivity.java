@@ -9,6 +9,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.Places;
+
+import java.util.Locale;
 
 import ca.dait.opengolf.app.R;
 import ca.dait.opengolf.app.drivers.AbstractInteractiveMapDriver;
@@ -36,6 +39,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.activity_main);
+
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), getString(R.string.google_maps_key), Locale.CANADA);
+        }
 
         //Call to initialize Google Maps
         SupportMapFragment mapFragment = (SupportMapFragment)

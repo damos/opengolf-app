@@ -11,11 +11,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.location.places.AutocompleteFilter;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.UiSettings;
@@ -25,9 +20,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.TypeFilter;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,8 +43,20 @@ import ca.dait.opengolf.entities.course.Course;
  */
 
 public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
+
+    private static final List PLACE_FIELDS = Arrays.asList(
+                Place.Field.ID,
+                Place.Field.NAME,
+                Place.Field.ADDRESS,
+                Place.Field.LAT_LNG,
+                Place.Field.VIEWPORT);
+
+
     private String placeId;
     private String facilityName;
+    private String municipality;
+    private String state;
+    private String country;
 
     private int currentHole;
     private Marker currentFlag;
@@ -67,6 +80,9 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
             Course course = new Gson().fromJson(rawCourse, Course.class);
             this.placeId = course.getGooglePlaceId();
             this.facilityName = course.getFacilityName();
+            this.municipality = course.getMunicipality();
+            this.state = course.getState();
+            this.country = course.getCountry();
 
             LatLngBounds.Builder boundsBuilder = LatLngBounds.builder();
             for(Course.Hole hole : course.getHoles()){
@@ -78,8 +94,7 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
                 this.startCourseDefinition();
             });
             this.googleMap.moveCamera(
-                    CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(),
-                            this.mainActivity.getResources().getInteger(R.integer.coursePreviewPadding))
+                    CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), this.mainActivity.getResources().getInteger(R.integer.coursePreviewPadding))
             );
             this.googleMap.setOnMapLoadedCallback(() -> {
                 this.googleMap.setOnMapLoadedCallback(null);
@@ -91,16 +106,13 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
     }
 
     protected void startNew(){
-        try{
-            Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
-                    .setFilter(new AutocompleteFilter.Builder()
-                            .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ESTABLISHMENT).build())
-                    .build(this.mainActivity);
-            this.mainActivity.startActivityForResult(intent, MainActivity.ACTIVITY_RESULT_MAP_DRIVER);
-        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
-            // TODO: Handle the error...
-            this.mainActivity.showMainMenuOverlay();
-        }
+
+        Intent intent = new Autocomplete
+                .IntentBuilder(AutocompleteActivityMode.OVERLAY, PLACE_FIELDS)
+                .setTypeFilter(TypeFilter.ESTABLISHMENT)
+                .build(this.mainActivity);
+        this.mainActivity.startActivityForResult(intent, MainActivity.ACTIVITY_RESULT_MAP_DRIVER);
+
     }
 
     @Override
@@ -108,11 +120,17 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
         return false;
     }
 
+    @Override
     public void onActivityResult(int resultCode, Intent data) {
         if(resultCode == Activity.RESULT_OK){
-            Place place = PlaceAutocomplete.getPlace(this.mainActivity, data);
+
+            Place place = Autocomplete.getPlaceFromIntent(data);
             this.placeId = place.getId();
-            this.facilityName = place.getName().toString();
+            this.facilityName = place.getName();
+            String address[] = place.getAddress().split(",");
+            this.municipality = address[1];
+            this.state = address[2].substring(1,3);
+            this.country = address[3].trim();
 
             final EditText nickName = this.getPanel(Panel.NICK_NAME);
             nickName.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
@@ -151,6 +169,11 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
                 this.show(Panel.NICK_NAME);
                 this.show(Button.START);
             });
+
+        }
+        else if (resultCode == AutocompleteActivity.RESULT_ERROR){
+            Toast.makeText(this.mainActivity, "Operation Failed.", Toast.LENGTH_SHORT).show();
+            this.mainActivity.showMainMenuOverlay();
         }
         else{
             //Go back to main menu.
@@ -206,8 +229,13 @@ public class CreateCourseMapDriver extends AbstractInteractiveMapDriver {
                         }).collect(Collectors.toList());
 
                 Course course = new Course();
+                course.setFacilityName(this.facilityName);
                 course.setGooglePlaceId(this.placeId);
+                course.setMunicipality(this.municipality);
+                course.setState(this.state);
+                course.setCountry(this.country);
                 course.setHoles(holes.toArray(new Course.Hole[holes.size()]));
+
                 JsonRepository repo = JsonRepository.getInstance(this.mainActivity.getApplicationContext());
                 if(this.courseId == -1) {
                     //New Course
